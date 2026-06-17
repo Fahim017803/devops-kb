@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DevOps Hub — Admin</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0a;--bg2:#111;--bg3:#1a1a1a;--bg4:#222;
+  --border:#2a2a2a;--border2:#383838;
+  --text:#e8e8e8;--text2:#999;--text3:#555;
+  --accent:#4a9eff;--accent-bg:rgba(74,158,255,.12);
+  --green:#22c55e;--green-bg:rgba(34,197,94,.15);
+  --yellow:#eab308;--yellow-bg:rgba(234,179,8,.15);
+  --red:#ef4444;--red-bg:rgba(239,68,68,.15);
+  --r:8px;--rs:6px
+}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+input,textarea,select{font-family:inherit;font-size:14px}
+
+/* ── LOGIN SCREEN ── */
+#loginScreen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:999}
+.login-box{width:360px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:32px}
+.login-box h1{font-size:20px;font-weight:600;color:#fff;margin-bottom:6px}
+.login-box p{font-size:13px;color:var(--text3);margin-bottom:28px}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:12px;color:var(--text2);margin-bottom:6px;font-weight:500}
+.field input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rs);padding:10px 12px;color:var(--text);outline:none;transition:border-color .15s}
+.field input:focus{border-color:var(--accent)}
+.btn-primary{width:100%;padding:11px;background:var(--accent);border:none;border-radius:var(--rs);color:#fff;font-size:14px;font-weight:500;cursor:pointer;transition:opacity .15s}
+.btn-primary:hover{opacity:.88}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+.login-err{font-size:13px;color:var(--red);margin-top:10px;text-align:center;min-height:20px}
+
+/* ── LAYOUT ── */
+#app{display:none;height:100vh;overflow:hidden}
+.layout{display:flex;height:100%}
+
+/* SIDEBAR */
+.sidebar{width:220px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:20px 12px}
+.sb-logo{display:flex;align-items:center;gap:9px;padding:4px 8px;margin-bottom:28px}
+.sb-logo-icon{width:26px;height:26px;background:var(--accent);border-radius:5px;display:flex;align-items:center;justify-content:center}
+.sb-logo-icon svg{width:14px;height:14px}
+.sb-logo span{font-size:14px;font-weight:600;color:#fff}
+.sb-section{font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text3);padding:0 8px;margin-bottom:6px;margin-top:20px}
+.sb-section:first-of-type{margin-top:0}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--rs);color:var(--text2);cursor:pointer;transition:all .15s;margin-bottom:2px}
+.nav-item svg{width:16px;height:16px;flex-shrink:0}
+.nav-item:hover{background:var(--bg3);color:var(--text)}
+.nav-item.active{background:var(--accent-bg);color:var(--accent)}
+.sb-footer{margin-top:auto;padding:12px 8px;border-top:1px solid var(--border)}
+.sb-user{font-size:13px;color:var(--text2);margin-bottom:8px}
+.sb-user span{color:var(--text);font-weight:500}
+.logout-btn{font-size:13px;color:var(--text3);cursor:pointer;transition:color .15s}
+.logout-btn:hover{color:var(--red)}
+
+/* MAIN AREA */
+.main-area{flex:1;overflow-y:auto;display:flex;flex-direction:column}
+.topbar{height:52px;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:12px;flex-shrink:0}
+.topbar h2{font-size:16px;font-weight:600;color:#fff}
+.topbar-actions{margin-left:auto;display:flex;gap:8px}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:var(--rs);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;border:1px solid var(--border2);background:var(--bg3);color:var(--text)}
+.btn:hover{background:var(--bg4)}
+.btn-accent{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn-accent:hover{opacity:.88}
+.btn-danger{background:var(--red-bg);border-color:var(--red);color:var(--red)}
+.btn-sm{padding:5px 10px;font-size:12px}
+
+/* CONTENT PANELS */
+.panel{padding:24px;display:none}
+.panel.active{display:block}
+
+/* STATS ROW */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px}
+.stat-card .val{font-size:28px;font-weight:700;color:#fff;margin-bottom:2px}
+.stat-card .lbl{font-size:12px;color:var(--text3)}
+
+/* TABLE */
+.table-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.table-header{display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid var(--border);gap:12px}
+.search-input{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rs);padding:7px 12px;color:var(--text);outline:none;width:220px;transition:border-color .15s}
+.search-input:focus{border-color:var(--accent)}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:10px 16px;font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border)}
+td{padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text2)}
+td:first-child{color:var(--text)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg3)}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500}
+.b-beginner{background:var(--green-bg);color:var(--green)}
+.b-intermediate{background:var(--yellow-bg);color:var(--yellow)}
+.b-advanced{background:var(--red-bg);color:var(--red)}
+.b-featured{background:var(--accent-bg);color:var(--accent)}
+.actions{display:flex;gap:6px}
+
+/* PAGINATION */
+.pagination{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-top:1px solid var(--border);font-size:13px;color:var(--text3)}
+.page-btns{display:flex;gap:4px}
+.page-btn{padding:4px 10px;border-radius:var(--rs);border:1px solid var(--border);background:var(--bg3);color:var(--text2);cursor:pointer;font-size:12px;transition:all .15s}
+.page-btn:hover:not(:disabled){background:var(--bg4);color:var(--text)}
+.page-btn:disabled{opacity:.4;cursor:not-allowed}
+.page-btn.active{background:var(--accent-bg);border-color:var(--accent);color:var(--accent)}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:500;display:none;align-items:center;justify-content:center;padding:24px}
+.modal-overlay.open{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:12px;width:100%;max-width:680px;max-height:90vh;overflow-y:auto}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border)}
+.modal-head h3{font-size:16px;font-weight:600;color:#fff}
+.modal-close{width:28px;height:28px;border-radius:var(--rs);background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);transition:all .15s}
+.modal-close:hover{background:var(--bg4);color:var(--text)}
+.modal-body{padding:22px}
+.modal-footer{padding:16px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-field{margin-bottom:16px}
+.form-field label{display:block;font-size:12px;color:var(--text2);margin-bottom:6px;font-weight:500}
+.form-field input,.form-field select,.form-field textarea{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rs);padding:9px 12px;color:var(--text);outline:none;transition:border-color .15s;resize:vertical}
+.form-field input:focus,.form-field select:focus,.form-field textarea:focus{border-color:var(--accent)}
+.form-field textarea{min-height:100px}
+.form-field select option{background:var(--bg3)}
+.toggle-wrap{display:flex;align-items:center;gap:10px}
+.toggle{position:relative;width:36px;height:20px}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;background:var(--bg4);border:1px solid var(--border2);border-radius:10px;cursor:pointer;transition:.2s}
+.toggle-slider:before{content:'';position:absolute;width:14px;height:14px;left:2px;top:2px;background:var(--text3);border-radius:50%;transition:.2s}
+.toggle input:checked+.toggle-slider{background:var(--accent);border-color:var(--accent)}
+.toggle input:checked+.toggle-slider:before{transform:translateX(16px);background:#fff}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r);padding:12px 18px;font-size:13px;color:var(--text);z-index:999;transform:translateY(80px);opacity:0;transition:all .3s}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{border-left:3px solid var(--green)}
+.toast.error{border-left:3px solid var(--red)}
+
+/* EMPTY */
+.empty{padding:48px;text-align:center;color:var(--text3)}
+.empty svg{width:40px;height:40px;margin:0 auto 12px;display:block;opacity:.3}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <h1>Admin Panel</h1>
+    <p>DevOps Hub — sign in to continue</p>
+    <div class="field">
+      <label>Username</label>
+      <input type="text" id="loginUser" value="admin" autocomplete="username">
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="btn-primary" id="loginBtn" onclick="doLogin()">Sign in</button>
+    <div class="login-err" id="loginErr"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sb-logo">
+        <div class="sb-logo-icon">
+          <svg viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="2" width="12" height="12" rx="2"/><rect x="5" y="5" width="6" height="6" rx="1"/>
+          </svg>
+        </div>
+        <span>DevOps Hub</span>
+      </div>
+
+      <div class="sb-section">Content</div>
+      <div class="nav-item active" onclick="showPanel('articles',this)">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h12M2 8h8M2 12h10"/></svg>
+        Articles
+      </div>
+      <div class="nav-item" onclick="showPanel('categories',this)">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
+        Categories
+      </div>
+
+      <div class="sb-section">Site</div>
+      <div class="nav-item" onclick="window.open('index.html','_blank')">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><path d="M8 2a9 9 0 0 1 0 12M8 2a9 9 0 0 0 0 12M2 8h12"/></svg>
+        View site
+      </div>
+
+      <div class="sb-footer">
+        <div class="sb-user">Signed in as <span id="sbUsername">—</span></div>
+        <div class="logout-btn" onclick="doLogout()">← Sign out</div>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <div class="main-area">
+
+      <!-- ARTICLES PANEL -->
+      <div id="panel-articles" class="panel active">
+        <div class="topbar">
+          <h2>Articles</h2>
+          <div class="topbar-actions">
+            <button class="btn btn-accent" onclick="openModal()">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
+              New article
+            </button>
+          </div>
+        </div>
+        <div style="padding:24px">
+          <div class="stats-row" id="statsRow">
+            <div class="stat-card"><div class="val" id="statTotal">—</div><div class="lbl">Total articles</div></div>
+            <div class="stat-card"><div class="val" id="statFeatured">—</div><div class="lbl">Featured</div></div>
+            <div class="stat-card"><div class="val" id="statCats">—</div><div class="lbl">Categories</div></div>
+            <div class="stat-card"><div class="val" id="statPages">—</div><div class="lbl">Pages</div></div>
+          </div>
+          <div class="table-wrap">
+            <div class="table-header">
+              <input class="search-input" placeholder="Search articles..." id="articleSearch" oninput="debounceSearch(this.value)">
+              <span style="font-size:12px;color:var(--text3)" id="tableCount"></span>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Title</th><th>Category</th><th>Level</th><th>Featured</th><th>Date</th><th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="articlesTbody"></tbody>
+            </table>
+            <div class="pagination" id="pagination"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CATEGORIES PANEL -->
+      <div id="panel-categories" class="panel">
+        <div class="topbar">
+          <h2>Categories</h2>
+          <div class="topbar-actions">
+            <button class="btn btn-accent" onclick="openCatModal()">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
+              New category
+            </button>
+          </div>
+        </div>
+        <div style="padding:24px">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Name</th><th>Slug</th><th>Icon</th><th>Articles</th></tr></thead>
+              <tbody id="catsTbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ARTICLE MODAL -->
+<div class="modal-overlay" id="articleModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modalTitle">New article</h3>
+      <div class="modal-close" onclick="closeModal()">✕</div>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editId">
+      <div class="form-row">
+        <div class="form-field" style="grid-column:1/-1">
+          <label>Title *</label>
+          <input type="text" id="fTitle" placeholder="Article title">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label>Category *</label>
+          <select id="fCategory"></select>
+        </div>
+        <div class="form-field">
+          <label>Level</label>
+          <select id="fLevel">
+            <option>Beginner</option><option>Intermediate</option><option>Advanced</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label>Slug (auto-generated)</label>
+          <input type="text" id="fSlug" placeholder="leave blank to auto-generate">
+        </div>
+        <div class="form-field">
+          <label>Read time (minutes)</label>
+          <input type="number" id="fReadTime" value="5" min="1" max="60">
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Excerpt</label>
+        <textarea id="fExcerpt" placeholder="Short description shown in article cards..." style="min-height:80px"></textarea>
+      </div>
+      <div class="form-field">
+        <label>Content (Markdown)</label>
+        <textarea id="fContent" placeholder="# Article content in Markdown..." style="min-height:160px;font-family:monospace;font-size:13px"></textarea>
+      </div>
+      <div class="form-field">
+        <label>Featured</label>
+        <div class="toggle-wrap">
+          <label class="toggle">
+            <input type="checkbox" id="fFeatured">
+            <span class="toggle-slider"></span>
+          </label>
+          <span style="font-size:13px;color:var(--text2)">Show in featured section</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-accent" id="saveBtn" onclick="saveArticle()">Save article</button>
+    </div>
+  </div>
+</div>
+
+<!-- CATEGORY MODAL -->
+<div class="modal-overlay" id="catModal">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-head">
+      <h3>New category</h3>
+      <div class="modal-close" onclick="closeCatModal()">✕</div>
+    </div>
+    <div class="modal-body">
+      <div class="form-field"><label>Name *</label><input type="text" id="cName" placeholder="e.g. CI/CD"></div>
+      <div class="form-field"><label>Slug</label><input type="text" id="cSlug" placeholder="e.g. cicd (auto if blank)"></div>
+      <div class="form-field"><label>Icon</label><input type="text" id="cIcon" placeholder="□" maxlength="4"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeCatModal()">Cancel</button>
+      <button class="btn btn-accent" onclick="saveCategory()">Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '/api';
+let token = localStorage.getItem('admin_token');
+let currentPage = 1;
+let categories  = [];
+let searchTimer = null;
+
+// ── AUTH ─────────────────────────────────────────────────
+async function doLogin() {
+  const btn = document.getElementById('loginBtn');
+  const err = document.getElementById('loginErr');
+  btn.disabled = true; btn.textContent = 'Signing in...';
+  err.textContent = '';
+  try {
+    const res = await fetch(`${API}/admin/login`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        username: document.getElementById('loginUser').value,
+        password: document.getElementById('loginPass').value,
+      })
+    });
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.error || 'Login failed');
+    token = data.token;
+    localStorage.setItem('admin_token', token);
+    document.getElementById('sbUsername').textContent = data.username;
+    showApp();
+  } catch(e) {
+    err.textContent = e.message;
+  } finally {
+    btn.disabled = false; btn.textContent = 'Sign in';
+  }
+}
+
+function doLogout() {
+  localStorage.removeItem('admin_token');
+  token = null;
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+}
+
+function showApp() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  loadCategories();
+  loadArticles();
+}
+
+// ── API HELPER ───────────────────────────────────────────
+async function api(path, options={}) {
+  const res = await fetch(`${API}${path}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+      ...(options.headers||{})
+    }
+  });
+  if(res.status === 401) { doLogout(); throw new Error('Session expired'); }
+  const data = await res.json();
+  if(!res.ok) throw new Error(data.error || 'Request failed');
+  return data;
+}
+
+// ── PANELS ───────────────────────────────────────────────
+function showPanel(name, el) {
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById(`panel-${name}`).classList.add('active');
+  el.classList.add('active');
+  if(name === 'categories') loadCategories(true);
+}
+
+// ── CATEGORIES ───────────────────────────────────────────
+async function loadCategories(renderTable=false) {
+  try {
+    categories = await api('/admin/categories');
+    const sel = document.getElementById('fCategory');
+    sel.innerHTML = categories.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+    document.getElementById('statCats').textContent = categories.length;
+    if(renderTable) renderCatsTable();
+  } catch(e) { toast(e.message,'error'); }
+}
+
+function renderCatsTable() {
+  const tbody = document.getElementById('catsTbody');
+  if(!categories.length) {
+    tbody.innerHTML = '<tr><td colspan="4"><div class="empty">No categories yet</div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = categories.map(c=>`
+    <tr>
+      <td style="color:#fff">${c.name}</td>
+      <td><code style="font-size:12px;color:var(--text3)">${c.slug}</code></td>
+      <td>${c.icon}</td>
+      <td>${c.count}</td>
+    </tr>`).join('');
+}
+
+function openCatModal()  { document.getElementById('catModal').classList.add('open'); }
+function closeCatModal() { document.getElementById('catModal').classList.remove('open'); }
+
+async function saveCategory() {
+  const name = document.getElementById('cName').value.trim();
+  if(!name) { toast('Name is required','error'); return; }
+  try {
+    await api('/admin/categories', {
+      method:'POST',
+      body: JSON.stringify({
+        name, slug: document.getElementById('cSlug').value.trim(),
+        icon: document.getElementById('cIcon').value.trim() || '□'
+      })
+    });
+    toast('Category created','success');
+    closeCatModal();
+    loadCategories(true);
+  } catch(e) { toast(e.message,'error'); }
+}
+
+// ── ARTICLES ─────────────────────────────────────────────
+async function loadArticles(page=1, q='') {
+  currentPage = page;
+  try {
+    const params = new URLSearchParams({page, per_page:12, ...(q && {q})});
+    const data = await api(`/admin/articles?${params}`);
+    renderTable(data.articles);
+    renderPagination(data.total, data.pages, page);
+    document.getElementById('statTotal').textContent = data.total;
+    document.getElementById('statPages').textContent = data.pages;
+    document.getElementById('tableCount').textContent = `${data.total} articles`;
+    const featured = data.articles.filter(a=>a.is_featured).length;
+    document.getElementById('statFeatured').textContent = featured;
+  } catch(e) { toast(e.message,'error'); }
+}
+
+function renderTable(articles) {
+  const tbody = document.getElementById('articlesTbody');
+  if(!articles.length) {
+    tbody.innerHTML = '<tr><td colspan="6"><div class="empty">No articles found</div></td></tr>';
+    return;
+  }
+  const lvlCls = {Beginner:'b-beginner',Intermediate:'b-intermediate',Advanced:'b-advanced'};
+  tbody.innerHTML = articles.map(a=>`
+    <tr>
+      <td style="max-width:280px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff">${a.title}</td>
+      <td>${a.category||'—'}</td>
+      <td><span class="badge ${lvlCls[a.level]||''}">${a.level}</span></td>
+      <td>${a.is_featured ? '<span class="badge b-featured">Featured</span>' : '<span style="color:var(--text3)">—</span>'}</td>
+      <td style="color:var(--text3)">${a.created_at.slice(0,10)}</td>
+      <td>
+        <div class="actions">
+          <button class="btn btn-sm" onclick="editArticle(${a.id})">Edit</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteArticle(${a.id},'${a.title.replace(/'/g,"\\'")}')">Delete</button>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+function renderPagination(total, pages, page) {
+  const el = document.getElementById('pagination');
+  if(pages <= 1) { el.innerHTML=''; return; }
+  const q = document.getElementById('articleSearch').value;
+  el.innerHTML = `
+    <span>${total} articles</span>
+    <div class="page-btns">
+      <button class="page-btn" onclick="loadArticles(${page-1},'${q}')" ${page<=1?'disabled':''}>← Prev</button>
+      ${Array.from({length:pages},(_,i)=>`<button class="page-btn ${i+1===page?'active':''}" onclick="loadArticles(${i+1},'${q}')">${i+1}</button>`).join('')}
+      <button class="page-btn" onclick="loadArticles(${page+1},'${q}')" ${page>=pages?'disabled':''}>Next →</button>
+    </div>`;
+}
+
+function debounceSearch(q) {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(()=>loadArticles(1,q), 300);
+}
+
+// ── MODAL ────────────────────────────────────────────────
+function openModal(article=null) {
+  document.getElementById('editId').value     = article?.id || '';
+  document.getElementById('fTitle').value     = article?.title || '';
+  document.getElementById('fSlug').value      = article?.slug || '';
+  document.getElementById('fExcerpt').value   = article?.excerpt || '';
+  document.getElementById('fContent').value   = article?.content || '';
+  document.getElementById('fReadTime').value  = article?.read_time || 5;
+  document.getElementById('fFeatured').checked= article?.is_featured || false;
+  document.getElementById('fLevel').value     = article?.level || 'Beginner';
+  if(article?.category_id) document.getElementById('fCategory').value = article.category_id;
+  document.getElementById('modalTitle').textContent = article ? 'Edit article' : 'New article';
+  document.getElementById('articleModal').classList.add('open');
+}
+
+function closeModal() { document.getElementById('articleModal').classList.remove('open'); }
+
+async function editArticle(id) {
+  try {
+    const a = await api(`/admin/articles/${id}`);
+    openModal(a);
+  } catch(e) { toast(e.message,'error'); }
+}
+
+async function saveArticle() {
+  const id    = document.getElementById('editId').value;
+  const title = document.getElementById('fTitle').value.trim();
+  const catId = document.getElementById('fCategory').value;
+  if(!title)  { toast('Title is required','error'); return; }
+  if(!catId)  { toast('Category is required','error'); return; }
+
+  const payload = {
+    title, category_id: catId,
+    slug:        document.getElementById('fSlug').value.trim(),
+    excerpt:     document.getElementById('fExcerpt').value.trim(),
+    content:     document.getElementById('fContent').value.trim(),
+    level:       document.getElementById('fLevel').value,
+    read_time:   parseInt(document.getElementById('fReadTime').value),
+    is_featured: document.getElementById('fFeatured').checked,
+  };
+
+  try {
+    const btn = document.getElementById('saveBtn');
+    btn.disabled = true; btn.textContent = 'Saving...';
+    if(id) {
+      await api(`/admin/articles/${id}`, {method:'PUT', body:JSON.stringify(payload)});
+      toast('Article updated','success');
+    } else {
+      await api('/admin/articles', {method:'POST', body:JSON.stringify(payload)});
+      toast('Article created','success');
+    }
+    closeModal();
+    loadArticles(currentPage, document.getElementById('articleSearch').value);
+  } catch(e) {
+    toast(e.message,'error');
+  } finally {
+    const btn = document.getElementById('saveBtn');
+    btn.disabled = false; btn.textContent = 'Save article';
+  }
+}
+
+async function deleteArticle(id, title) {
+  if(!confirm(`Delete "${title}"?\nThis cannot be undone.`)) return;
+  try {
+    await api(`/admin/articles/${id}`, {method:'DELETE'});
+    toast('Article deleted','success');
+    loadArticles(currentPage, document.getElementById('articleSearch').value);
+  } catch(e) { toast(e.message,'error'); }
+}
+
+// ── TOAST ────────────────────────────────────────────────
+function toast(msg, type='success') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `toast ${type} show`;
+  setTimeout(()=>el.classList.remove('show'), 3000);
+}
+
+// ── KEYBOARD SHORTCUTS ───────────────────────────────────
+document.addEventListener('keydown', e=>{
+  if(e.key==='Escape') { closeModal(); closeCatModal(); }
+  if((e.metaKey||e.ctrlKey)&&e.key==='Enter') saveArticle();
+});
+
+document.getElementById('loginPass').addEventListener('keydown', e=>{
+  if(e.key==='Enter') doLogin();
+});
+
+// ── INIT ─────────────────────────────────────────────────
+if(token) {
+  // Verify token still valid
+  fetch(`${API}/admin/me`, {headers:{'Authorization':`Bearer ${token}`}})
+    .then(r=>r.ok ? r.json() : Promise.reject())
+    .then(d=>{
+      document.getElementById('sbUsername').textContent = d.username;
+      showApp();
+    })
+    .catch(()=>{ localStorage.removeItem('admin_token'); token=null; });
+}
+</script>
+</body>
+</html>

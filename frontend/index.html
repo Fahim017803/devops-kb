@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DevOps Hub — Learn DevOps, build real things</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0a;--bg2:#111111;--bg3:#1a1a1a;--bg4:#222222;
+  --border:#2a2a2a;--border2:#383838;
+  --text:#e8e8e8;--text2:#999;--text3:#555;
+  --accent:#4a9eff;--accent-bg:rgba(74,158,255,.12);
+  --green:#22c55e;--green-bg:rgba(34,197,94,.15);
+  --yellow:#eab308;--yellow-bg:rgba(234,179,8,.15);
+  --red:#ef4444;--red-bg:rgba(239,68,68,.15);
+  --orange:#f97316;--orange-bg:rgba(249,115,22,.15);
+  --teal:#14b8a6;--teal-bg:rgba(20,184,166,.15);
+  --r:10px;--rs:6px;--max:1120px
+}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:100;background:rgba(10,10,10,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);height:56px;display:flex;align-items:center}
+.nav-inner{max-width:var(--max);width:100%;margin:0 auto;padding:0 24px;display:flex;align-items:center;gap:28px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px;flex-shrink:0}
+.logo-icon{width:28px;height:28px;background:var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center}
+.logo-icon svg{width:16px;height:16px}
+.nav-links{display:flex;align-items:center;gap:2px;list-style:none}
+.nav-links a{padding:6px 12px;color:var(--text2);font-size:14px;border-radius:var(--rs);transition:color .15s,background .15s}
+.nav-links a:hover{color:var(--text);background:var(--bg3)}
+.nav-search{margin-left:auto;display:flex;align-items:center;gap:8px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rs);padding:7px 14px;color:var(--text3);font-size:14px;cursor:pointer;transition:border-color .15s}
+.nav-search:hover{border-color:var(--border2)}
+.nav-search svg{width:14px;height:14px}
+
+/* HERO */
+.hero{text-align:center;padding:72px 24px 56px;max-width:var(--max);margin:0 auto}
+.badge{display:inline-block;border:1px solid var(--border2);border-radius:999px;padding:5px 16px;font-size:13px;color:var(--text2);margin-bottom:28px}
+.hero h1{font-size:clamp(36px,5vw,54px);font-weight:700;line-height:1.15;letter-spacing:-.02em;color:#fff;margin-bottom:20px}
+.hero p{font-size:17px;color:var(--text2);max-width:560px;margin:0 auto 36px;line-height:1.65}
+.hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;padding:11px 22px;border-radius:var(--rs);font-size:14px;font-weight:500;cursor:pointer;transition:all .15s;border:1px solid var(--border2);background:var(--bg3);color:var(--text)}
+.btn:hover{background:var(--bg4)}
+
+/* FILTER BAR */
+.filter-bar{border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:var(--bg);position:sticky;top:56px;z-index:90}
+.filter-inner{max-width:var(--max);margin:0 auto;padding:0 24px;display:flex;gap:2px;overflow-x:auto;-ms-overflow-style:none;scrollbar-width:none}
+.filter-inner::-webkit-scrollbar{display:none}
+.fbtn{flex-shrink:0;padding:12px 16px;font-size:14px;color:var(--text2);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;transition:color .15s,border-color .15s;white-space:nowrap}
+.fbtn:hover{color:var(--text)}
+.fbtn.active{color:#fff;border-bottom-color:#fff}
+
+/* MAIN */
+.main{max-width:var(--max);margin:0 auto;padding:48px 24px 80px}
+.section-label{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:20px}
+
+/* FEATURED */
+.featured-grid{display:grid;grid-template-columns:1fr 340px;gap:16px;margin-bottom:64px}
+.feat-main{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;cursor:pointer;transition:border-color .2s;display:flex;flex-direction:column}
+.feat-main:hover{border-color:var(--border2)}
+.feat-img{background:linear-gradient(160deg,#1e3a5f,#0f2440);height:220px;display:flex;align-items:center;justify-content:center;position:relative}
+.feat-img-icon{width:48px;height:48px;border:2px solid rgba(255,255,255,.3);border-radius:8px}
+.depth-badge{position:absolute;top:14px;left:14px;background:var(--accent);color:#fff;font-size:11px;font-weight:600;padding:3px 10px;border-radius:4px}
+.feat-body{padding:22px;flex:1}
+.feat-body h2{font-size:18px;font-weight:600;line-height:1.4;color:#fff;margin-bottom:10px}
+.feat-body p{font-size:14px;color:var(--text2);line-height:1.6;margin-bottom:18px}
+.feat-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tag{display:inline-flex;align-items:center;padding:3px 10px;border-radius:4px;font-size:12px;font-weight:500}
+.t-blue{background:var(--accent-bg);color:var(--accent)}
+.t-green{background:var(--green-bg);color:var(--green)}
+.t-yellow{background:var(--yellow-bg);color:var(--yellow)}
+.t-red{background:var(--red-bg);color:var(--red)}
+.t-orange{background:var(--orange-bg);color:var(--orange)}
+.t-teal{background:var(--teal-bg);color:var(--teal)}
+.rtime{font-size:13px;color:var(--text3);margin-left:4px}
+.feat-side{display:flex;flex-direction:column;gap:12px}
+.side-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:18px;cursor:pointer;transition:border-color .2s;display:flex;gap:14px;align-items:flex-start;flex:1}
+.side-card:hover{border-color:var(--border2)}
+.side-icon{width:36px;height:36px;flex-shrink:0;border-radius:8px;display:flex;align-items:center;justify-content:center;background:var(--bg4);border:1px solid var(--border)}
+.side-icon svg{width:18px;height:18px}
+.side-card h3{font-size:14px;font-weight:600;color:#fff;margin-bottom:6px;line-height:1.4}
+.side-card p{font-size:13px;color:var(--text2);line-height:1.5}
+
+/* ARTICLES GRID */
+.art-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:64px}
+.art-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:20px;cursor:pointer;transition:border-color .2s;display:flex;flex-direction:column}
+.art-card:hover{border-color:var(--border2)}
+.card-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
+.card-icon{width:36px;height:36px;border-radius:8px;background:var(--bg4);border:1px solid var(--border);display:flex;align-items:center;justify-content:center}
+.card-icon svg{width:18px;height:18px}
+.lvl{font-size:11px;font-weight:600;padding:3px 9px;border-radius:4px}
+.lvl-b{background:var(--green-bg);color:var(--green)}
+.lvl-i{background:var(--yellow-bg);color:var(--yellow)}
+.lvl-a{background:var(--red-bg);color:var(--red)}
+.art-card h3{font-size:15px;font-weight:600;color:#fff;line-height:1.4;margin-bottom:10px}
+.art-card p{font-size:13px;color:var(--text2);line-height:1.55;flex:1;margin-bottom:16px}
+.card-foot{display:flex;justify-content:space-between;align-items:center;margin-top:auto}
+.card-cat{font-size:12px;color:var(--accent)}
+.card-bm svg{width:16px;height:16px;color:var(--text3);transition:color .15s}
+.art-card:hover .card-bm svg{color:var(--text2)}
+
+/* TOPICS GRID */
+.topic-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:64px}
+.topic-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:20px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s}
+.topic-card:hover{border-color:var(--border2);background:var(--bg4)}
+.topic-icon{width:44px;height:44px;border-radius:10px;background:var(--bg4);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;margin:0 auto 12px}
+.topic-icon svg{width:22px;height:22px}
+.topic-card h4{font-size:14px;font-weight:600;color:#fff;margin-bottom:4px}
+.topic-card span{font-size:13px;color:var(--text3)}
+
+/* FOOTER */
+footer{border-top:1px solid var(--border);background:var(--bg)}
+.foot-top{max-width:var(--max);margin:0 auto;padding:48px 24px 40px;display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:40px}
+.foot-brand p{font-size:13px;color:var(--text3);line-height:1.6;margin-top:12px;max-width:200px}
+.foot-col h5{font-size:13px;font-weight:600;color:var(--text2);margin-bottom:14px}
+.foot-col ul{list-style:none}
+.foot-col li{margin-bottom:8px}
+.foot-col a{font-size:13px;color:var(--text3);transition:color .15s}
+.foot-col a:hover{color:var(--text2)}
+.foot-bottom{border-top:1px solid var(--border);max-width:var(--max);margin:0 auto;padding:16px 24px;display:flex;justify-content:space-between;align-items:center}
+.foot-bottom span{font-size:12px;color:var(--text3)}
+
+/* SKELETON */
+.skeleton{background:linear-gradient(90deg,var(--bg3) 25%,var(--bg4) 50%,var(--bg3) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:var(--r)}
+@keyframes shimmer{to{background-position:-200% 0}}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  .featured-grid{grid-template-columns:1fr}
+  .art-grid{grid-template-columns:repeat(2,1fr)}
+  .foot-top{grid-template-columns:1fr 1fr;gap:28px}
+  .nav-links{display:none}
+}
+@media(max-width:600px){
+  .art-grid{grid-template-columns:1fr}
+  .topic-grid{grid-template-columns:repeat(2,1fr)}
+  .foot-top{grid-template-columns:1fr}
+}
+
+/* SEARCH MODAL */
+.search-overlay{position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);display:none;align-items:flex-start;justify-content:center;padding-top:80px}
+.search-overlay.open{display:flex}
+.search-box{width:100%;max-width:600px;background:var(--bg2);border:1px solid var(--border2);border-radius:12px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.6)}
+.search-input-wrap{display:flex;align-items:center;gap:12px;padding:16px 18px;border-bottom:1px solid var(--border)}
+.search-input-wrap svg{width:18px;height:18px;color:var(--text3);flex-shrink:0}
+.search-input-wrap input{flex:1;background:none;border:none;outline:none;font-size:16px;color:var(--text);caret-color:var(--accent)}
+.search-input-wrap input::placeholder{color:var(--text3)}
+.search-close{background:var(--bg4);border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-size:11px;color:var(--text3);cursor:pointer}
+.search-results{max-height:400px;overflow-y:auto}
+.search-result{display:flex;align-items:flex-start;gap:12px;padding:14px 18px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .12s}
+.search-result:last-child{border-bottom:none}
+.search-result:hover{background:var(--bg3)}
+.sr-icon{width:32px;height:32px;border-radius:6px;background:var(--bg4);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sr-icon svg{width:16px;height:16px}
+.sr-title{font-size:14px;font-weight:500;color:#fff;margin-bottom:3px;line-height:1.35}
+.sr-meta{font-size:12px;color:var(--text3)}
+.sr-meta .lvl{font-size:11px;padding:2px 7px;border-radius:3px;margin-left:6px}
+.search-empty{padding:32px;text-align:center;color:var(--text3);font-size:14px}
+.search-hint{padding:12px 18px;font-size:12px;color:var(--text3);border-top:1px solid var(--border);display:flex;gap:16px}
+.search-hint span{display:flex;align-items:center;gap:4px}
+kbd{display:inline-block;background:var(--bg4);border:1px solid var(--border2);border-radius:4px;padding:1px 5px;font-size:11px;color:var(--text3);font-family:inherit}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <a href="/" class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="2" width="12" height="12" rx="2"/><rect x="5" y="5" width="6" height="6" rx="1"/>
+        </svg>
+      </div>
+      DevOps Hub
+    </a>
+    <ul class="nav-links">
+      <li><a href="#">Articles</a></li>
+      <li><a href="#">Tutorials</a></li>
+      <li><a href="#">Projects</a></li>
+      <li><a href="#">Tools</a></li>
+      <li><a href="#">About</a></li>
+    </ul>
+    <div class="nav-search" id="searchTrigger" onclick="openSearch()">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+        <circle cx="6.5" cy="6.5" r="4.5"/><line x1="10" y1="10" x2="14" y2="14"/>
+      </svg>
+      Search articles...
+      <kbd>⌘K</kbd>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="badge">Open knowledge — free forever</div>
+  <h1>Learn DevOps,<br>build real things.</h1>
+  <p>Practical guides on CI/CD, Kubernetes, Docker, cloud infrastructure, and everything in between — written by engineers, for engineers.</p>
+  <div class="hero-btns">
+    <a href="#articles" class="btn">Start learning</a>
+    <a href="#topics" class="btn">Browse all topics</a>
+  </div>
+</section>
+
+<!-- FILTER BAR -->
+<div class="filter-bar">
+  <div class="filter-inner" id="filterBar">
+    <button class="fbtn active" data-cat="all">All</button>
+    <button class="fbtn" data-cat="cicd">CI/CD</button>
+    <button class="fbtn" data-cat="kubernetes">Kubernetes</button>
+    <button class="fbtn" data-cat="docker">Docker</button>
+    <button class="fbtn" data-cat="aws">AWS</button>
+    <button class="fbtn" data-cat="github-actions">GitHub Actions</button>
+    <button class="fbtn" data-cat="security">Security</button>
+    <button class="fbtn" data-cat="monitoring">Monitoring</button>
+    <button class="fbtn" data-cat="linux">Linux</button>
+    <button class="fbtn" data-cat="iac">IaC / Terraform</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- FEATURED -->
+  <section style="margin-bottom:64px">
+    <div class="section-label">Featured this week</div>
+    <div class="featured-grid">
+      <div class="feat-main">
+        <div class="feat-img">
+          <div class="depth-badge">In depth</div>
+          <div class="feat-img-icon"></div>
+        </div>
+        <div class="feat-body">
+          <h2>Building a production-grade CI/CD pipeline with GitHub Actions, Docker, and self-hosted runners</h2>
+          <p>A complete walkthrough of setting up parallel security scanning, staged deployments with manual approval gates, and automated rollback strategies.</p>
+          <div class="feat-meta">
+            <span class="tag t-blue">CI/CD</span>
+            <span class="tag t-green">GitHub Actions</span>
+            <span class="rtime">12 min read</span>
+          </div>
+        </div>
+      </div>
+      <div class="feat-side">
+        <div class="side-card">
+          <div class="side-icon">
+            <svg viewBox="0 0 18 18" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="9,2 16,6 16,12 9,16 2,12 2,6"/><circle cx="9" cy="9" r="2"/>
+            </svg>
+          </div>
+          <div>
+            <h3>Kubernetes on a budget: KinD on EC2</h3>
+            <p>Run a full K8s cluster on a single $5/month EC2 instance — no EKS costs needed for learning.</p>
+          </div>
+        </div>
+        <div class="side-card">
+          <div class="side-icon">
+            <svg viewBox="0 0 18 18" fill="none" stroke="var(--orange)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 2L16 6V12L9 16L2 12V6Z"/>
+            </svg>
+          </div>
+          <div>
+            <h3>DevSecOps: adding Trivy and OWASP ZAP to your pipeline</h3>
+            <p>Shift security left by scanning images and live endpoints automatically on every push.</p>
+          </div>
+        </div>
+        <div class="side-card">
+          <div class="side-icon">
+            <svg viewBox="0 0 18 18" fill="none" stroke="var(--yellow)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="5" width="14" height="10" rx="2"/><path d="M6 5V4a3 3 0 0 1 6 0v1"/>
+            </svg>
+          </div>
+          <div>
+            <h3>AWS EC2 for DevOps engineers: the essentials</h3>
+            <p>Security groups, key pairs, instance types, and cost control — what actually matters.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ARTICLES -->
+  <section id="articles" style="margin-bottom:64px">
+    <div class="section-label">Latest articles</div>
+    <div class="art-grid" id="articlesGrid"></div>
+  </section>
+
+  <!-- TOPICS -->
+  <section id="topics">
+    <div class="section-label">Browse by topic</div>
+    <div class="topic-grid" id="topicsGrid"></div>
+  </section>
+
+</main>
+
+<!-- FOOTER -->
+<footer>
+  <div class="foot-top">
+    <div class="foot-brand">
+      <a href="/" class="logo">
+        <div class="logo-icon">
+          <svg viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="2" width="12" height="12" rx="2"/><rect x="5" y="5" width="6" height="6" rx="1"/>
+          </svg>
+        </div>
+        DevOps Hub
+      </a>
+      <p>Practical knowledge for engineers who build and ship real infrastructure.</p>
+    </div>
+    <div class="foot-col">
+      <h5>Learn</h5>
+      <ul>
+        <li><a href="#">Getting started</a></li>
+        <li><a href="#">CI/CD guide</a></li>
+        <li><a href="#">Kubernetes basics</a></li>
+        <li><a href="#">Docker handbook</a></li>
+      </ul>
+    </div>
+    <div class="foot-col">
+      <h5>Topics</h5>
+      <ul>
+        <li><a href="#">AWS</a></li>
+        <li><a href="#">Security</a></li>
+        <li><a href="#">Monitoring</a></li>
+        <li><a href="#">Linux</a></li>
+      </ul>
+    </div>
+    <div class="foot-col">
+      <h5>About</h5>
+      <ul>
+        <li><a href="#">About this site</a></li>
+        <li><a href="https://github.com/Fahim017803" target="_blank">GitHub</a></li>
+        <li><a href="#">Docker Hub</a></li>
+        <li><a href="#">Contact</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="foot-bottom">
+    <span>© 2025 DevOps Hub · Built with CI/CD + Kubernetes</span>
+    <span>Deployed on AWS EC2 · SSL by Let's Encrypt</span>
+  </div>
+</footer>
+
+<script>
+const API = '/api';
+
+const STATIC_ARTICLES = [
+  {title:'Docker fundamentals: images, containers, and volumes explained',slug:'docker-fundamentals',excerpt:'Everything you need to containerize your first application from scratch.',level:'Beginner',category:'Docker',category_slug:'docker'},
+  {title:'Kubernetes deployments, services, and ingress — a practical guide',slug:'kubernetes-deployments-services-ingress',excerpt:'Write real manifests and understand what each field actually does.',level:'Intermediate',category:'Kubernetes',category_slug:'kubernetes'},
+  {title:'Monitoring your infrastructure with Prometheus and Grafana',slug:'prometheus-grafana-monitoring',excerpt:'Set up dashboards, alerts, and metrics collection in under an hour.',level:'Intermediate',category:'Monitoring',category_slug:'monitoring'},
+  {title:'Secrets management in Kubernetes: avoid the common mistakes',slug:'kubernetes-secrets-management',excerpt:'Base64 is not encryption. Here is how to actually protect your secrets.',level:'Advanced',category:'Security',category_slug:'security'},
+  {title:'AWS free tier survival guide: avoid surprise charges',slug:'aws-free-tier-survival-guide',excerpt:'The exact services and settings that lead to unexpected bills — and how to stay safe.',level:'Beginner',category:'AWS',category_slug:'aws'},
+  {title:'Infrastructure as Code with Terraform: from zero to production',slug:'terraform-zero-to-production',excerpt:'Provision, manage, and destroy cloud resources declaratively and repeatably.',level:'Advanced',category:'IaC / Terraform',category_slug:'iac'},
+];
+
+const STATIC_TOPICS = [
+  {name:'CI/CD',slug:'cicd',count:14},{name:'Kubernetes',slug:'kubernetes',count:11},
+  {name:'Docker',slug:'docker',count:9},{name:'Cloud / AWS',slug:'aws',count:8},
+  {name:'Security',slug:'security',count:6},{name:'Monitoring',slug:'monitoring',count:5},
+  {name:'Linux',slug:'linux',count:7},{name:'IaC / Terraform',slug:'iac',count:4},
+];
+
+const CAT_COLORS = {
+  cicd:'var(--accent)',kubernetes:'var(--teal)',docker:'var(--accent)',
+  aws:'var(--yellow)',security:'var(--red)',monitoring:'var(--green)',
+  linux:'var(--text2)',iac:'var(--orange)'
+};
+
+function icon(slug, c) {
+  const s = `<svg viewBox="0 0 18 18" fill="none" stroke="${c}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">`;
+  const icons = {
+    cicd:       s+`<circle cx="5" cy="9" r="2"/><circle cx="13" cy="9" r="2"/><path d="M7 9h2m2 0h-2m0 0V7m0 2v2"/></svg>`,
+    kubernetes: s+`<polygon points="9,2 16,6 16,12 9,16 2,12 2,6"/><circle cx="9" cy="9" r="2"/></svg>`,
+    docker:     s+`<rect x="2" y="2" width="14" height="14" rx="3"/><rect x="5" y="5" width="8" height="8" rx="2"/></svg>`,
+    aws:        s+`<rect x="3" y="7" width="12" height="7" rx="2"/><path d="M6 7V5a3 3 0 0 1 6 0v2"/></svg>`,
+    security:   s+`<path d="M9 2L15 5v5c0 3-2.5 5.5-6 6-3.5-.5-6-3-6-6V5L9 2z"/></svg>`,
+    monitoring: s+`<polyline points="2,12 5,8 8,10 11,5 14,9 16,6"/></svg>`,
+    linux:      s+`<rect x="2" y="3" width="14" height="10" rx="2"/><path d="M6 16h6M9 13v3"/></svg>`,
+    iac:        s+`<path d="M3 6l6-4 6 4v6l-6 4-6-4V6z"/><path d="M9 2v14M3 6l6 4 6-4"/></svg>`,
+  };
+  return icons[slug] || icons['docker'];
+}
+
+function lvlBadge(l) {
+  const m={Beginner:'lvl-b',Intermediate:'lvl-i',Advanced:'lvl-a'};
+  return `<span class="lvl ${m[l]||'lvl-b'}">${l}</span>`;
+}
+
+function renderArticles(list) {
+  document.getElementById('articlesGrid').innerHTML = list.map(a => {
+    const slug = a.category_slug||'docker';
+    const c = CAT_COLORS[slug]||'var(--accent)';
+    return `<div class="art-card" onclick="openArticle('${a.slug}')">
+      <div class="card-hdr"><div class="card-icon">${icon(slug,c)}</div>${lvlBadge(a.level)}</div>
+      <h3>${a.title}</h3>
+      <p>${a.excerpt}</p>
+      <div class="card-foot">
+        <span class="card-cat">${a.category}</span>
+        <span class="card-bm"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2h8a1 1 0 0 1 1 1v11l-5-3-5 3V3a1 1 0 0 1 1-1z"/></svg></span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderTopics(list) {
+  document.getElementById('topicsGrid').innerHTML = list.map(t => {
+    const c = CAT_COLORS[t.slug]||'var(--accent)';
+    return `<div class="topic-card" onclick="filterCat('${t.slug}')">
+      <div class="topic-icon">${icon(t.slug,c)}</div>
+      <h4>${t.name}</h4>
+      <span>${t.count} articles</span>
+    </div>`;
+  }).join('');
+}
+
+async function loadArticles(cat='all') {
+  const grid = document.getElementById('articlesGrid');
+  grid.innerHTML = Array(6).fill(`<div class="skeleton" style="height:220px"></div>`).join('');
+  try {
+    const url = cat==='all' ? `${API}/articles?per_page=6` : `${API}/articles?category=${cat}&per_page=6`;
+    const res = await fetch(url,{signal:AbortSignal.timeout(3000)});
+    if(!res.ok) throw 0;
+    renderArticles((await res.json()).articles);
+  } catch {
+    const filtered = cat==='all' ? STATIC_ARTICLES : STATIC_ARTICLES.filter(a=>a.category_slug===cat);
+    renderArticles(filtered.length ? filtered : STATIC_ARTICLES);
+  }
+}
+
+async function loadTopics() {
+  try {
+    const res = await fetch(`${API}/categories`,{signal:AbortSignal.timeout(3000)});
+    if(!res.ok) throw 0;
+    renderTopics(await res.json());
+  } catch { renderTopics(STATIC_TOPICS); }
+}
+
+function filterCat(slug) {
+  document.querySelectorAll('.fbtn').forEach(b=>b.classList.toggle('active',b.dataset.cat===slug));
+  window.scrollTo({top:document.getElementById('articles').offsetTop-120,behavior:'smooth'});
+  loadArticles(slug);
+}
+
+function openArticle(slug) { console.log('Open:',slug); /* Step 3: article detail page */ }
+
+document.getElementById('filterBar').addEventListener('click',e=>{
+  const b=e.target.closest('.fbtn');
+  if(!b) return;
+  document.querySelectorAll('.fbtn').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  loadArticles(b.dataset.cat);
+});
+
+loadArticles();
+loadTopics();
+
+// SEARCH ─────────────────────────────────────────────────
+const SEARCH_STATIC = [
+  {title:'Docker fundamentals: images, containers, and volumes explained',slug:'docker-fundamentals',level:'Beginner',category:'Docker',category_slug:'docker'},
+  {title:'Kubernetes deployments, services, and ingress — a practical guide',slug:'kubernetes-deployments-services-ingress',level:'Intermediate',category:'Kubernetes',category_slug:'kubernetes'},
+  {title:'Monitoring your infrastructure with Prometheus and Grafana',slug:'prometheus-grafana-monitoring',level:'Intermediate',category:'Monitoring',category_slug:'monitoring'},
+  {title:'Secrets management in Kubernetes: avoid the common mistakes',slug:'kubernetes-secrets-management',level:'Advanced',category:'Security',category_slug:'security'},
+  {title:'AWS free tier survival guide: avoid surprise charges',slug:'aws-free-tier-survival-guide',level:'Beginner',category:'AWS',category_slug:'aws'},
+  {title:'Infrastructure as Code with Terraform: from zero to production',slug:'terraform-zero-to-production',level:'Advanced',category:'IaC / Terraform',category_slug:'iac'},
+  {title:'Building a production-grade CI/CD pipeline with GitHub Actions',slug:'production-cicd-github-actions',level:'Intermediate',category:'CI/CD',category_slug:'cicd'},
+  {title:'Kubernetes on a budget: KinD on EC2',slug:'kubernetes-kind-ec2',level:'Beginner',category:'Kubernetes',category_slug:'kubernetes'},
+  {title:'DevSecOps: adding Trivy and OWASP ZAP to your pipeline',slug:'devsecops-trivy-owasp-zap',level:'Intermediate',category:'Security',category_slug:'security'},
+  {title:'AWS EC2 for DevOps engineers: the essentials',slug:'aws-ec2-devops-essentials',level:'Beginner',category:'AWS',category_slug:'aws'},
+];
+
+let searchTimer = null;
+let selectedIdx = -1;
+
+function openSearch() {
+  document.getElementById('searchOverlay').classList.add('open');
+  setTimeout(()=>document.getElementById('searchInput').focus(), 50);
+  document.body.style.overflow = 'hidden';
+}
+
+function closeSearch() {
+  document.getElementById('searchOverlay').classList.remove('open');
+  document.getElementById('searchInput').value = '';
+  document.getElementById('searchResults').innerHTML = '<div class="search-empty">Type to search articles...</div>';
+  selectedIdx = -1;
+  document.body.style.overflow = '';
+}
+
+function handleOverlayClick(e) {
+  if(e.target === document.getElementById('searchOverlay')) closeSearch();
+}
+
+function renderSearchResults(results, q) {
+  const container = document.getElementById('searchResults');
+  if(!results.length) {
+    container.innerHTML = `<div class="search-empty">No results for "<strong style="color:var(--text2)">${q}</strong>"</div>`;
+    return;
+  }
+  container.innerHTML = results.map((a,i) => {
+    const slug = a.category_slug||'docker';
+    const c = CAT_COLORS[slug]||'var(--accent)';
+    const lvlCls = {Beginner:'lvl-b',Intermediate:'lvl-i',Advanced:'lvl-a'}[a.level]||'lvl-b';
+    const titleHl = a.title.replace(new RegExp(q,'gi'), m=>`<mark style="background:var(--accent-bg);color:var(--accent);border-radius:2px">${m}</mark>`);
+    return `<div class="search-result" data-idx="${i}" data-slug="${a.slug}" onclick="openArticle('${a.slug}');closeSearch()">
+      <div class="sr-icon">${icon(slug,c)}</div>
+      <div>
+        <div class="sr-title">${titleHl}</div>
+        <div class="sr-meta">${a.category}<span class="lvl ${lvlCls}">${a.level}</span></div>
+      </div>
+    </div>`;
+  }).join('');
+  selectedIdx = -1;
+}
+
+async function doSearch(q) {
+  if(q.length < 2) {
+    document.getElementById('searchResults').innerHTML = '<div class="search-empty">Type to search articles...</div>';
+    return;
+  }
+  try {
+    const res = await fetch(`${API}/search?q=${encodeURIComponent(q)}`,{signal:AbortSignal.timeout(2000)});
+    if(!res.ok) throw 0;
+    const data = await res.json();
+    renderSearchResults(data.results, q);
+  } catch {
+    const qLow = q.toLowerCase();
+    const filtered = SEARCH_STATIC.filter(a=>a.title.toLowerCase().includes(qLow));
+    renderSearchResults(filtered, q);
+  }
+}
+
+document.getElementById('searchInput').addEventListener('input', e => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(()=>doSearch(e.target.value.trim()), 200);
+});
+
+document.getElementById('searchInput').addEventListener('keydown', e => {
+  const items = document.querySelectorAll('.search-result');
+  if(e.key==='ArrowDown'){e.preventDefault();selectedIdx=Math.min(selectedIdx+1,items.length-1);}
+  else if(e.key==='ArrowUp'){e.preventDefault();selectedIdx=Math.max(selectedIdx-1,0);}
+  else if(e.key==='Enter'&&selectedIdx>=0){items[selectedIdx].click();return;}
+  else if(e.key==='Escape'){closeSearch();return;}
+  items.forEach((el,i)=>el.style.background=i===selectedIdx?'var(--bg3)':'');
+  if(selectedIdx>=0) items[selectedIdx].scrollIntoView({block:'nearest'});
+});
+
+// ⌘K / Ctrl+K shortcut
+document.addEventListener('keydown', e=>{
+  if((e.metaKey||e.ctrlKey)&&e.key==='k'){e.preventDefault();openSearch();}
+});
+
+</script>
+
+<!-- SEARCH MODAL -->
+<div class="search-overlay" id="searchOverlay" onclick="handleOverlayClick(event)">
+  <div class="search-box" id="searchBox">
+    <div class="search-input-wrap">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+        <circle cx="6.5" cy="6.5" r="4.5"/><line x1="10" y1="10" x2="14" y2="14"/>
+      </svg>
+      <input type="text" id="searchInput" placeholder="Search articles..." autocomplete="off" spellcheck="false">
+      <button class="search-close" onclick="closeSearch()">ESC</button>
+    </div>
+    <div class="search-results" id="searchResults">
+      <div class="search-empty">Type to search articles...</div>
+    </div>
+    <div class="search-hint">
+      <span><kbd>↑</kbd><kbd>↓</kbd> navigate</span>
+      <span><kbd>↵</kbd> open</span>
+      <span><kbd>ESC</kbd> close</span>
+    </div>
+  </div>
+</div>
+</body>
+</html>
