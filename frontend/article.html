@@ -148,6 +148,37 @@ function renderMarkdown(md) {
   // Links [text](url)
   html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
 
+  // Tables — | col | col | rows, with a |---|---| separator line
+  {
+    const lines2 = html.split('\n');
+    const out2 = [];
+    let i = 0;
+    while (i < lines2.length) {
+      const line = lines2[i];
+      const isRow = /^\s*\|(.+)\|\s*$/.test(line);
+      const nextIsSep = i + 1 < lines2.length && /^\s*\|?[\s:|-]+\|?\s*$/.test(lines2[i+1]) && lines2[i+1].includes('-');
+      if (isRow && nextIsSep) {
+        const headers = line.split('|').slice(1, -1).map(s => s.trim());
+        i += 2; // skip header + separator
+        const rows = [];
+        while (i < lines2.length && /^\s*\|(.+)\|\s*$/.test(lines2[i])) {
+          rows.push(lines2[i].split('|').slice(1, -1).map(s => s.trim()));
+          i++;
+        }
+        let table = '<table><thead><tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr></thead><tbody>';
+        for (const r of rows) {
+          table += '<tr>' + r.map(c => `<td>${c}</td>`).join('') + '</tr>';
+        }
+        table += '</tbody></table>';
+        out2.push(table);
+      } else {
+        out2.push(line);
+        i++;
+      }
+    }
+    html = out2.join('\n');
+  }
+
   // Lists — group consecutive list lines
   const lines = html.split('\n');
   let out = [];
@@ -176,7 +207,7 @@ function renderMarkdown(md) {
   html = out.join('\n');
 
   // Paragraphs — wrap remaining plain lines (not already tags) into <p>
-  const blockTags = /^<(h1|h2|h3|ul|ol|li|blockquote|pre|hr)/;
+  const blockTags = /^<(h1|h2|h3|ul|ol|li|blockquote|pre|hr|table)/;
   html = html.split('\n\n').map(block => {
     block = block.trim();
     if (!block) return '';
