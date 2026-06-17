@@ -66,6 +66,11 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,10,10,.92);backdrop-fil
 .art-body hr{border:none;border-top:1px solid var(--border);margin:32px 0}
 .art-body img{max-width:100%;border-radius:var(--r);margin:20px 0}
 .art-body table{width:100%;border-collapse:collapse;margin-bottom:20px}
+.art-diagram{margin:28px 0;padding:20px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r)}
+.art-diagram svg{width:100%;height:auto;display:block}
+.art-diagram text{fill:#d4d4d4;font-family:inherit}
+.art-diagram .th{font-weight:600;fill:#fff;font-size:13px}
+.art-diagram .ts{font-size:11.5px;fill:#999}
 .art-body th,.art-body td{padding:10px 14px;border:1px solid var(--border);text-align:left;font-size:14px}
 .art-body th{background:var(--bg3);color:var(--text2);font-weight:600}
 
@@ -110,14 +115,152 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,10,10,.92);backdrop-fil
 <script>
 const API = '/api';
 
+// ── Embedded diagrams (referenced via [[DIAGRAM:name]] in article content) ──
+const DIAGRAMS = {
+
+big_picture: `<svg viewBox="0 0 680 470" style="width:100%">
+<defs><marker id="a1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#888" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<rect x="240" y="20" width="200" height="56" rx="8" fill="#2a2a2a" stroke="#444" stroke-width="1"/>
+<text x="340" y="42" text-anchor="middle" font-size="13" font-weight="600" fill="#fff">Your computer</text>
+<text x="340" y="60" text-anchor="middle" font-size="11.5" fill="#999">git push origin staging</text>
+<line x1="340" y1="76" x2="340" y2="110" stroke="#888" stroke-width="1.5" marker-end="url(#a1)"/>
+<rect x="200" y="110" width="280" height="56" rx="8" fill="#2d2740" stroke="#534ab7" stroke-width="1"/>
+<text x="340" y="132" text-anchor="middle" font-size="13" font-weight="600" fill="#cecbf6">GitHub Actions</text>
+<text x="340" y="150" text-anchor="middle" font-size="11.5" fill="#a89fe0">the robot worker, wakes up automatically</text>
+<line x1="340" y1="166" x2="340" y2="200" stroke="#888" stroke-width="1.5" marker-end="url(#a1)"/>
+<rect x="200" y="200" width="280" height="56" rx="8" fill="#3a2620" stroke="#d85a30" stroke-width="1"/>
+<text x="340" y="222" text-anchor="middle" font-size="13" font-weight="600" fill="#f5c4b3">Scan, build, scan again</text>
+<text x="340" y="240" text-anchor="middle" font-size="11.5" fill="#e0a589">security checks, then seal the box</text>
+<line x1="340" y1="256" x2="340" y2="290" stroke="#888" stroke-width="1.5" marker-end="url(#a1)"/>
+<rect x="200" y="290" width="280" height="56" rx="8" fill="#163530" stroke="#0f6e56" stroke-width="1"/>
+<text x="340" y="312" text-anchor="middle" font-size="13" font-weight="600" fill="#9fe1cb">Docker Hub</text>
+<text x="340" y="330" text-anchor="middle" font-size="11.5" fill="#6fc6a8">the warehouse — sealed box stored here</text>
+<path d="M340 346 L340 364 L220 364 L220 380" fill="none" stroke="#888" stroke-width="1.5" marker-end="url(#a1)"/>
+<path d="M340 346 L340 364 L460 364 L460 380" fill="none" stroke="#888" stroke-width="1.5" marker-end="url(#a1)"/>
+<text x="160" y="362" text-anchor="middle" font-size="11.5" fill="#999">automatic</text>
+<text x="520" y="362" text-anchor="middle" font-size="11.5" fill="#999">you click approve</text>
+<rect x="120" y="380" width="200" height="56" rx="8" fill="#3a2e10" stroke="#854f0b" stroke-width="1"/>
+<text x="220" y="402" text-anchor="middle" font-size="13" font-weight="600" fill="#fac775">Staging server</text>
+<text x="220" y="420" text-anchor="middle" font-size="11.5" fill="#d9a85f">auto-deployed, for testing</text>
+<rect x="360" y="380" width="200" height="56" rx="8" fill="#3a2e10" stroke="#854f0b" stroke-width="1"/>
+<text x="460" y="402" text-anchor="middle" font-size="13" font-weight="600" fill="#fac775">Production server</text>
+<text x="460" y="420" text-anchor="middle" font-size="11.5" fill="#d9a85f">real visitors, needs your approval</text>
+</svg>`,
+
+cast: `<svg viewBox="0 0 680 420" style="width:100%">
+<rect x="40" y="40" width="190" height="100" rx="10" fill="#1c2e42" stroke="#185fa5" stroke-width="1"/>
+<text x="135" y="66" text-anchor="middle" font-size="13" font-weight="600" fill="#85b7eb">EC2</text>
+<text x="135" y="92" text-anchor="middle" font-size="11.5" fill="#9bb8d4">a computer that's</text>
+<text x="135" y="108" text-anchor="middle" font-size="11.5" fill="#9bb8d4">always on</text>
+<text x="135" y="128" text-anchor="middle" font-size="11.5" fill="#6f8aa8" font-style="italic">like renting a desk</text>
+<rect x="245" y="40" width="190" height="100" rx="10" fill="#163530" stroke="#0f6e56" stroke-width="1"/>
+<text x="340" y="66" text-anchor="middle" font-size="13" font-weight="600" fill="#9fe1cb">Docker</text>
+<text x="340" y="92" text-anchor="middle" font-size="11.5" fill="#7fc3aa">packages your app</text>
+<text x="340" y="108" text-anchor="middle" font-size="11.5" fill="#7fc3aa">into a sealed box</text>
+<text x="340" y="128" text-anchor="middle" font-size="11.5" fill="#5a9684" font-style="italic">a shipping container</text>
+<rect x="450" y="40" width="190" height="100" rx="10" fill="#2d2740" stroke="#534ab7" stroke-width="1"/>
+<text x="545" y="66" text-anchor="middle" font-size="13" font-weight="600" fill="#cecbf6">GitHub Actions</text>
+<text x="545" y="92" text-anchor="middle" font-size="11.5" fill="#a89fe0">runs tasks</text>
+<text x="545" y="108" text-anchor="middle" font-size="11.5" fill="#a89fe0">automatically</text>
+<text x="545" y="128" text-anchor="middle" font-size="11.5" fill="#8077ab" font-style="italic">a worker who never sleeps</text>
+<rect x="40" y="165" width="190" height="100" rx="10" fill="#3a2620" stroke="#d85a30" stroke-width="1"/>
+<text x="135" y="191" text-anchor="middle" font-size="13" font-weight="600" fill="#f5c4b3">A runner</text>
+<text x="135" y="217" text-anchor="middle" font-size="11.5" fill="#e0a589">where the robot</text>
+<text x="135" y="233" text-anchor="middle" font-size="11.5" fill="#e0a589">does its work</text>
+<text x="135" y="253" text-anchor="middle" font-size="11.5" fill="#b87f60" font-style="italic">the robot's workbench</text>
+<rect x="245" y="165" width="190" height="100" rx="10" fill="#3a2e10" stroke="#854f0b" stroke-width="1"/>
+<text x="340" y="191" text-anchor="middle" font-size="13" font-weight="600" fill="#fac775">nginx</text>
+<text x="340" y="217" text-anchor="middle" font-size="11.5" fill="#d9a85f">greets visitors,</text>
+<text x="340" y="233" text-anchor="middle" font-size="11.5" fill="#d9a85f">shows your site</text>
+<text x="340" y="253" text-anchor="middle" font-size="11.5" fill="#a87f44" font-style="italic">the front-desk receptionist</text>
+<rect x="450" y="165" width="190" height="100" rx="10" fill="#1f3508" stroke="#3b6d11" stroke-width="1"/>
+<text x="545" y="191" text-anchor="middle" font-size="13" font-weight="600" fill="#c0dd97">SSL / HTTPS</text>
+<text x="545" y="217" text-anchor="middle" font-size="11.5" fill="#a3c479" font-style="normal">encrypts traffic</text>
+<text x="545" y="233" text-anchor="middle" font-size="11.5" fill="#a3c479">to your site</text>
+<text x="545" y="253" text-anchor="middle" font-size="11.5" fill="#7d9c5a" font-style="italic">a sealed envelope</text>
+<rect x="245" y="290" width="190" height="100" rx="10" fill="#3d1f2c" stroke="#993556" stroke-width="1"/>
+<text x="340" y="316" text-anchor="middle" font-size="13" font-weight="600" fill="#f4c0d1">DNS</text>
+<text x="340" y="342" text-anchor="middle" font-size="11.5" fill="#d99cb2" font-style="normal">turns a domain name</text>
+<text x="340" y="358" text-anchor="middle" font-size="11.5" fill="#d99cb2">into a server address</text>
+<text x="340" y="378" text-anchor="middle" font-size="11.5" fill="#a8748a" font-style="italic">a phonebook</text>
+</svg>`,
+
+pipeline: `<svg viewBox="0 0 680 400" style="width:100%">
+<defs><marker id="a2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#888" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<rect x="260" y="20" width="160" height="44" rx="8" fill="#2a2a2a" stroke="#444" stroke-width="1"/>
+<text x="340" y="46" text-anchor="middle" font-size="13" font-weight="600" fill="#fff">You push code</text>
+<line x1="340" y1="64" x2="340" y2="90" stroke="#888" stroke-width="1.5" marker-end="url(#a2)"/>
+<text x="340" y="86" text-anchor="middle" font-size="11.5" fill="#999">four checks, all at once</text>
+<rect x="40" y="100" width="135" height="56" rx="8" fill="#3a2620" stroke="#d85a30" stroke-width="1"/>
+<text x="107" y="124" text-anchor="middle" font-size="13" font-weight="600" fill="#f5c4b3">Secret scan</text>
+<text x="107" y="142" text-anchor="middle" font-size="11.5" fill="#e0a589">no leaked passwords?</text>
+<rect x="187" y="100" width="135" height="56" rx="8" fill="#3a2620" stroke="#d85a30" stroke-width="1"/>
+<text x="254" y="124" text-anchor="middle" font-size="13" font-weight="600" fill="#f5c4b3">Code quality</text>
+<text x="254" y="142" text-anchor="middle" font-size="11.5" fill="#e0a589">clean and consistent?</text>
+<rect x="334" y="100" width="135" height="56" rx="8" fill="#3a2620" stroke="#d85a30" stroke-width="1"/>
+<text x="401" y="124" text-anchor="middle" font-size="13" font-weight="600" fill="#f5c4b3">Docker lint</text>
+<text x="401" y="142" text-anchor="middle" font-size="11.5" fill="#e0a589">no Dockerfile mistakes?</text>
+<rect x="481" y="100" width="159" height="56" rx="8" fill="#3a2620" stroke="#d85a30" stroke-width="1"/>
+<text x="560" y="124" text-anchor="middle" font-size="13" font-weight="600" fill="#f5c4b3">Dependency scan</text>
+<text x="560" y="142" text-anchor="middle" font-size="11.5" fill="#e0a589">no known vulnerabilities?</text>
+<path d="M107 156 L107 180 L340 180 L340 194" fill="none" stroke="#888" stroke-width="1.5" marker-end="url(#a2)"/>
+<path d="M254 156 L254 180 L340 180" fill="none" stroke="#888" stroke-width="1.5"/>
+<path d="M401 156 L401 180 L340 180" fill="none" stroke="#888" stroke-width="1.5"/>
+<path d="M560 156 L560 180 L340 180" fill="none" stroke="#888" stroke-width="1.5"/>
+<text x="340" y="190" text-anchor="middle" font-size="11.5" fill="#999">all four must pass</text>
+<rect x="240" y="200" width="200" height="50" rx="8" fill="#3a2e10" stroke="#854f0b" stroke-width="1"/>
+<text x="340" y="222" text-anchor="middle" font-size="13" font-weight="600" fill="#fac775">Build the sealed box</text>
+<text x="340" y="240" text-anchor="middle" font-size="11.5" fill="#d9a85f">only if everything passed</text>
+<line x1="340" y1="250" x2="340" y2="276" stroke="#888" stroke-width="1.5" marker-end="url(#a2)"/>
+<rect x="240" y="276" width="200" height="50" rx="8" fill="#163530" stroke="#0f6e56" stroke-width="1"/>
+<text x="340" y="298" text-anchor="middle" font-size="13" font-weight="600" fill="#9fe1cb">Deploy to staging</text>
+<text x="340" y="316" text-anchor="middle" font-size="11.5" fill="#7fc3aa">automatic, for testing</text>
+<line x1="340" y1="326" x2="340" y2="352" stroke="#888" stroke-width="1.5" marker-end="url(#a2)"/>
+<rect x="240" y="352" width="200" height="34" rx="8" fill="#2d2740" stroke="#534ab7" stroke-width="1"/>
+<text x="340" y="373" text-anchor="middle" font-size="13" font-weight="600" fill="#cecbf6">You approve → production</text>
+</svg>`,
+
+debug_layers: `<svg viewBox="0 0 680 410" style="width:100%">
+<defs><marker id="a3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#888" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<rect x="140" y="20" width="400" height="56" rx="8" fill="#4a1b1b" stroke="#a32d2d" stroke-width="1"/>
+<text x="160" y="44" font-size="13" font-weight="600" fill="#f7c1c1">1. Config files first</text>
+<text x="160" y="62" font-size="11.5" fill="#dd9999">docker-compose.yml, nginx.conf, Dockerfile</text>
+<line x1="340" y1="76" x2="340" y2="102" stroke="#888" stroke-width="1.5" marker-end="url(#a3)"/>
+<rect x="140" y="102" width="400" height="56" rx="8" fill="#3a2620" stroke="#d85a30" stroke-width="1"/>
+<text x="160" y="126" font-size="13" font-weight="600" fill="#f5c4b3">2. The container</text>
+<text x="160" y="144" font-size="11.5" fill="#e0a589">docker ps, docker logs</text>
+<line x1="340" y1="158" x2="340" y2="184" stroke="#888" stroke-width="1.5" marker-end="url(#a3)"/>
+<rect x="140" y="184" width="400" height="56" rx="8" fill="#3a2e10" stroke="#854f0b" stroke-width="1"/>
+<text x="160" y="208" font-size="13" font-weight="600" fill="#fac775">3. Network, from the server</text>
+<text x="160" y="226" font-size="11.5" fill="#d9a85f">curl http://localhost</text>
+<line x1="340" y1="240" x2="340" y2="266" stroke="#888" stroke-width="1.5" marker-end="url(#a3)"/>
+<rect x="140" y="266" width="400" height="56" rx="8" fill="#1f3508" stroke="#3b6d11" stroke-width="1"/>
+<text x="160" y="290" font-size="13" font-weight="600" fill="#c0dd97">4. DNS</text>
+<text x="160" y="308" font-size="11.5" fill="#a3c479">nslookup yourdomain.com</text>
+<line x1="340" y1="322" x2="340" y2="348" stroke="#888" stroke-width="1.5" marker-end="url(#a3)"/>
+<rect x="140" y="348" width="400" height="44" rx="8" fill="#2a2a2a" stroke="#444" stroke-width="1"/>
+<text x="160" y="374" font-size="13" font-weight="600" fill="#ccc">5. Only then, the browser</text>
+</svg>`
+
+};
+
 // ── Minimal markdown → HTML renderer ────────────────────────
 // Supports: headers, bold, italic, links, code blocks, inline code,
 // unordered/ordered lists, blockquotes, hr, paragraphs.
 function renderMarkdown(md) {
   if (!md) return '<p>No content yet.</p>';
 
+  // Extract [[DIAGRAM:name]] placeholders BEFORE escaping, so raw SVG survives
+  const diagramStash = [];
+  let pre = md.replace(/\[\[DIAGRAM:([a-z0-9_]+)\]\]/gi, (_, name) => {
+    const svg = DIAGRAMS[name.toLowerCase()];
+    const token = `@@DIAGRAM_${diagramStash.length}@@`;
+    diagramStash.push(svg || '<p><em>(diagram not found)</em></p>');
+    return `\n\n${token}\n\n`;
+  });
+
   // Escape HTML first to prevent injection, then re-allow our own tags
-  let html = md
+  let html = pre
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
@@ -211,9 +354,15 @@ function renderMarkdown(md) {
   html = html.split('\n\n').map(block => {
     block = block.trim();
     if (!block) return '';
+    if (/^@@DIAGRAM_\d+@@$/.test(block)) return block;
     if (blockTags.test(block) || block.startsWith('<pre') || block.includes('<li>')) return block;
     return `<p>${block}</p>`;
   }).join('\n');
+
+  // Restore diagram placeholders with their real SVG, wrapped for spacing
+  html = html.replace(/@@DIAGRAM_(\d+)@@/g, (_, i) =>
+    `<div class="art-diagram">${diagramStash[parseInt(i)]}</div>`
+  );
 
   return html;
 }
