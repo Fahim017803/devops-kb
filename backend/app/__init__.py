@@ -22,14 +22,21 @@ def create_app():
 
     # ── Ensure tables exist + seed default admin ──────────
     # This runs on every app startup (works with gunicorn AND `python run.py`)
+    # Wrapped in try/except to handle race conditions when multiple
+    # gunicorn workers boot simultaneously and both try to seed the admin user.
     with app.app_context():
         db.create_all()
         from app.models import AdminUser
+        from sqlalchemy.exc import IntegrityError
         if not AdminUser.query.first():
-            admin_user = AdminUser(username="admin")
-            admin_user.set_password(os.environ.get("ADMIN_PASSWORD", "devops123"))
-            db.session.add(admin_user)
-            db.session.commit()
-            print("✅ Default admin created: admin / " + os.environ.get("ADMIN_PASSWORD", "devops123"))
+            try:
+                admin_user = AdminUser(username="admin")
+                admin_user.set_password(os.environ.get("ADMIN_PASSWORD", "devops123"))
+                db.session.add(admin_user)
+                db.session.commit()
+                print("✅ Default admin created: admin / " + os.environ.get("ADMIN_PASSWORD", "devops123"))
+            except IntegrityError:
+                # Another worker already created it — safe to ignore
+                db.session.rollback()
 
     return app
