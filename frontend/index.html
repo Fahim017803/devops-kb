@@ -225,56 +225,13 @@ kbd{display:inline-block;background:var(--bg4);border:1px solid var(--border2);b
   <!-- FEATURED -->
   <section style="margin-bottom:64px">
     <div class="section-label">Featured this week</div>
-    <div class="featured-grid">
+    <div class="featured-grid" id="featuredGrid">
       <div class="feat-main">
-        <div class="feat-img">
-          <div class="depth-badge">In depth</div>
-          <div class="feat-img-icon"></div>
-        </div>
-        <div class="feat-body">
-          <h2>Building a production-grade CI/CD pipeline with GitHub Actions, Docker, and self-hosted runners</h2>
-          <p>A complete walkthrough of setting up parallel security scanning, staged deployments with manual approval gates, and automated rollback strategies.</p>
-          <div class="feat-meta">
-            <span class="tag t-blue">CI/CD</span>
-            <span class="tag t-green">GitHub Actions</span>
-            <span class="rtime">12 min read</span>
-          </div>
-        </div>
+        <div class="feat-img"><div class="feat-img-icon"></div></div>
+        <div class="feat-body"><div class="skeleton" style="height:120px"></div></div>
       </div>
       <div class="feat-side">
-        <div class="side-card">
-          <div class="side-icon">
-            <svg viewBox="0 0 18 18" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <polygon points="9,2 16,6 16,12 9,16 2,12 2,6"/><circle cx="9" cy="9" r="2"/>
-            </svg>
-          </div>
-          <div>
-            <h3>Kubernetes on a budget: KinD on EC2</h3>
-            <p>Run a full K8s cluster on a single $5/month EC2 instance — no EKS costs needed for learning.</p>
-          </div>
-        </div>
-        <div class="side-card">
-          <div class="side-icon">
-            <svg viewBox="0 0 18 18" fill="none" stroke="var(--orange)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M9 2L16 6V12L9 16L2 12V6Z"/>
-            </svg>
-          </div>
-          <div>
-            <h3>DevSecOps: adding Trivy and OWASP ZAP to your pipeline</h3>
-            <p>Shift security left by scanning images and live endpoints automatically on every push.</p>
-          </div>
-        </div>
-        <div class="side-card">
-          <div class="side-icon">
-            <svg viewBox="0 0 18 18" fill="none" stroke="var(--yellow)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="2" y="5" width="14" height="10" rx="2"/><path d="M6 5V4a3 3 0 0 1 6 0v1"/>
-            </svg>
-          </div>
-          <div>
-            <h3>AWS EC2 for DevOps engineers: the essentials</h3>
-            <p>Security groups, key pairs, instance types, and cost control — what actually matters.</p>
-          </div>
-        </div>
+        <div class="skeleton" style="height:100%"></div>
       </div>
     </div>
   </section>
@@ -441,7 +398,7 @@ function filterCat(slug) {
   loadArticles(slug);
 }
 
-function openArticle(slug) { console.log('Open:',slug); /* Step 3: article detail page */ }
+function openArticle(slug) { location.href = `article.html?slug=${slug}`; }
 
 document.getElementById('filterBar').addEventListener('click',e=>{
   const b=e.target.closest('.fbtn');
@@ -451,8 +408,73 @@ document.getElementById('filterBar').addEventListener('click',e=>{
   loadArticles(b.dataset.cat);
 });
 
+// FEATURED SECTION ──────────────────────────────────────────
+const FEATURED_ICONS = {
+  cicd: `<polygon points="9,2 16,6 16,12 9,16 2,12 2,6"/><circle cx="9" cy="9" r="2"/>`,
+  kubernetes: `<polygon points="9,2 16,6 16,12 9,16 2,12 2,6"/><circle cx="9" cy="9" r="2"/>`,
+  security: `<path d="M9 2L16 6V12L9 16L2 12V6Z"/>`,
+  aws: `<rect x="2" y="5" width="14" height="10" rx="2"/><path d="M6 5V4a3 3 0 0 1 6 0v1"/>`,
+  docker: `<rect x="2" y="2" width="14" height="14" rx="3"/><rect x="5" y="5" width="8" height="8" rx="2"/>`,
+  monitoring: `<polyline points="2,12 5,8 8,10 11,5 14,9 16,6"/>`,
+  linux: `<rect x="2" y="3" width="14" height="10" rx="2"/><path d="M6 16h6M9 13v3"/>`,
+  iac: `<path d="M3 6l6-4 6 4v6l-6 4-6-4V6z"/><path d="M9 2v14M3 6l6 4 6-4"/>`,
+};
+
+function renderFeatured(list) {
+  const grid = document.getElementById('featuredGrid');
+  if (!list.length) {
+    grid.innerHTML = '<div class="skeleton" style="height:220px;grid-column:1/-1"></div>';
+    return;
+  }
+  const [main, ...sides] = list;
+  const mainSlug = main.category_slug || 'docker';
+  const mainColor = CAT_COLORS[mainSlug] || 'var(--accent)';
+  const mainTagCls = {cicd:'t-blue',kubernetes:'t-green',docker:'t-blue',aws:'t-yellow',security:'t-red',monitoring:'t-green',linux:'t-blue',iac:'t-yellow'}[mainSlug] || 't-blue';
+  const lvlTagCls = {Beginner:'t-green',Intermediate:'t-yellow',Advanced:'t-red'}[main.level] || 't-green';
+
+  grid.innerHTML = `
+    <div class="feat-main" onclick="openArticle('${main.slug}')">
+      <div class="feat-img">
+        <div class="depth-badge">In depth</div>
+        <div class="feat-img-icon"></div>
+      </div>
+      <div class="feat-body">
+        <h2>${main.title}</h2>
+        <p>${main.excerpt||''}</p>
+        <div class="feat-meta">
+          <span class="tag ${mainTagCls}">${main.category||''}</span>
+          <span class="tag ${lvlTagCls}">${main.level}</span>
+          <span class="rtime">${main.read_time} min read</span>
+        </div>
+      </div>
+    </div>
+    <div class="feat-side">
+      ${sides.slice(0,3).map(a=>{
+        const slug = a.category_slug||'docker';
+        const c = CAT_COLORS[slug]||'var(--accent)';
+        const ic = FEATURED_ICONS[slug]||FEATURED_ICONS['docker'];
+        return `<div class="side-card" onclick="openArticle('${a.slug}')">
+          <div class="side-icon"><svg viewBox="0 0 18 18" fill="none" stroke="${c}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${ic}</svg></div>
+          <div><h3>${a.title}</h3><p>${a.excerpt||''}</p></div>
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
+async function loadFeatured() {
+  try {
+    const res = await fetch(`${API}/articles?featured=true&per_page=4`,{signal:AbortSignal.timeout(3000)});
+    if(!res.ok) throw 0;
+    const data = await res.json();
+    renderFeatured(data.articles);
+  } catch {
+    renderFeatured([]);
+  }
+}
+
 loadArticles();
 loadTopics();
+loadFeatured();
 
 // SEARCH ─────────────────────────────────────────────────
 const SEARCH_STATIC = [

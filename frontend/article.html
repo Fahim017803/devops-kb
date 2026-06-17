@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Loading article... — DevOps Hub</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0a;--bg2:#111111;--bg3:#1a1a1a;--bg4:#222222;
+  --border:#2a2a2a;--border2:#383838;
+  --text:#e8e8e8;--text2:#999;--text3:#555;
+  --accent:#4a9eff;--accent-bg:rgba(74,158,255,.12);
+  --green:#22c55e;--green-bg:rgba(34,197,94,.15);
+  --yellow:#eab308;--yellow-bg:rgba(234,179,8,.15);
+  --red:#ef4444;--red-bg:rgba(239,68,68,.15);
+  --orange:#f97316;--teal:#14b8a6;
+  --r:10px;--rs:6px;--max:760px
+}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;font-size:16px;line-height:1.7;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:100;background:rgba(10,10,10,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);height:56px;display:flex;align-items:center}
+.nav-inner{max-width:1120px;width:100%;margin:0 auto;padding:0 24px;display:flex;align-items:center;gap:28px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px;flex-shrink:0}
+.logo-icon{width:28px;height:28px;background:var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center}
+.logo-icon svg{width:16px;height:16px}
+.back-link{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:14px;color:var(--text2);padding:6px 12px;border-radius:var(--rs);transition:all .15s;cursor:pointer}
+.back-link:hover{color:var(--text);background:var(--bg3)}
+.back-link svg{width:14px;height:14px}
+
+/* CONTAINER */
+.wrap{max-width:var(--max);margin:0 auto;padding:48px 24px 100px}
+
+/* LOADING/ERROR */
+.state-box{text-align:center;padding:100px 24px;color:var(--text3)}
+.state-box svg{width:32px;height:32px;margin:0 auto 16px;opacity:.4}
+.skeleton{background:linear-gradient(90deg,var(--bg3) 25%,var(--bg4) 50%,var(--bg3) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:6px}
+@keyframes shimmer{to{background-position:-200% 0}}
+
+/* ARTICLE HEADER */
+.art-meta{display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+.tag{display:inline-flex;align-items:center;padding:4px 11px;border-radius:5px;font-size:12px;font-weight:500}
+.t-blue{background:var(--accent-bg);color:var(--accent)}
+.t-green{background:var(--green-bg);color:var(--green)}
+.t-yellow{background:var(--yellow-bg);color:var(--yellow)}
+.t-red{background:var(--red-bg);color:var(--red)}
+.rtime{font-size:13px;color:var(--text3)}
+.art-title{font-size:clamp(28px,4vw,40px);font-weight:700;line-height:1.2;letter-spacing:-.02em;color:#fff;margin-bottom:18px}
+.art-excerpt{font-size:18px;color:var(--text2);line-height:1.6;margin-bottom:32px;padding-bottom:32px;border-bottom:1px solid var(--border)}
+
+/* ARTICLE BODY (rendered markdown) */
+.art-body h1{font-size:28px;font-weight:700;color:#fff;margin:40px 0 16px;letter-spacing:-.01em}
+.art-body h2{font-size:23px;font-weight:600;color:#fff;margin:36px 0 14px}
+.art-body h3{font-size:19px;font-weight:600;color:#fff;margin:28px 0 12px}
+.art-body p{margin-bottom:18px;color:#d4d4d4}
+.art-body ul,.art-body ol{margin:0 0 18px 22px;color:#d4d4d4}
+.art-body li{margin-bottom:8px}
+.art-body code{background:var(--bg3);border:1px solid var(--border);padding:2px 6px;border-radius:4px;font-size:14px;font-family:'SF Mono',Monaco,monospace;color:#e8b34a}
+.art-body pre{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;margin-bottom:20px;overflow-x:auto}
+.art-body pre code{background:none;border:none;padding:0;color:#9cdcfe;font-size:13.5px;line-height:1.6}
+.art-body blockquote{border-left:3px solid var(--accent);padding:4px 0 4px 18px;color:var(--text2);margin-bottom:18px;font-style:italic}
+.art-body a{color:var(--accent);text-decoration:underline;text-decoration-color:var(--accent-bg)}
+.art-body strong{color:#fff;font-weight:600}
+.art-body hr{border:none;border-top:1px solid var(--border);margin:32px 0}
+.art-body img{max-width:100%;border-radius:var(--r);margin:20px 0}
+.art-body table{width:100%;border-collapse:collapse;margin-bottom:20px}
+.art-body th,.art-body td{padding:10px 14px;border:1px solid var(--border);text-align:left;font-size:14px}
+.art-body th{background:var(--bg3);color:var(--text2);font-weight:600}
+
+/* FOOTER NAV (prev/next or back) */
+.art-footer{margin-top:56px;padding-top:32px;border-top:1px solid var(--border)}
+.back-btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:var(--rs);border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:14px;cursor:pointer;transition:all .15s}
+.back-btn:hover{background:var(--bg4)}
+.back-btn svg{width:14px;height:14px}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="index.html" class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="2" width="12" height="12" rx="2"/><rect x="5" y="5" width="6" height="6" rx="1"/>
+        </svg>
+      </div>
+      DevOps Hub
+    </a>
+    <a href="index.html" class="back-link">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3L5 8l5 5"/></svg>
+      All articles
+    </a>
+  </div>
+</nav>
+
+<div class="wrap" id="content">
+  <!-- Loading skeleton -->
+  <div id="loadingState">
+    <div class="skeleton" style="height:24px;width:120px;margin-bottom:20px"></div>
+    <div class="skeleton" style="height:44px;width:90%;margin-bottom:14px"></div>
+    <div class="skeleton" style="height:44px;width:60%;margin-bottom:24px"></div>
+    <div class="skeleton" style="height:18px;width:100%;margin-bottom:10px"></div>
+    <div class="skeleton" style="height:18px;width:100%;margin-bottom:10px"></div>
+    <div class="skeleton" style="height:18px;width:80%;margin-bottom:30px"></div>
+  </div>
+</div>
+
+<script>
+const API = '/api';
+
+// ── Minimal markdown → HTML renderer ────────────────────────
+// Supports: headers, bold, italic, links, code blocks, inline code,
+// unordered/ordered lists, blockquotes, hr, paragraphs.
+function renderMarkdown(md) {
+  if (!md) return '<p>No content yet.</p>';
+
+  // Escape HTML first to prevent injection, then re-allow our own tags
+  let html = md
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
+  // Code blocks ```...```
+  html = html.replace(/```([a-z]*)\n([\s\S]*?)```/g, (_, lang, code) =>
+    `<pre><code>${code.trim()}</code></pre>`
+  );
+
+  // Headers
+  html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+  html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+  html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+
+  // Blockquote
+  html = html.replace(/^> (.*$)/gim, '<blockquote>$1</blockquote>');
+
+  // Horizontal rule
+  html = html.replace(/^---$/gim, '<hr>');
+
+  // Bold / italic
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+
+  // Inline code
+  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+  // Links [text](url)
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+
+  // Lists — group consecutive list lines
+  const lines = html.split('\n');
+  let out = [];
+  let inUl = false, inOl = false;
+
+  for (let line of lines) {
+    const ulMatch = line.match(/^[-*] (.*)$/);
+    const olMatch = line.match(/^\d+\. (.*)$/);
+
+    if (ulMatch) {
+      if (!inUl) { out.push('<ul>'); inUl = true; }
+      out.push(`<li>${ulMatch[1]}</li>`);
+      continue;
+    } else if (inUl) { out.push('</ul>'); inUl = false; }
+
+    if (olMatch) {
+      if (!inOl) { out.push('<ol>'); inOl = true; }
+      out.push(`<li>${olMatch[1]}</li>`);
+      continue;
+    } else if (inOl) { out.push('</ol>'); inOl = false; }
+
+    out.push(line);
+  }
+  if (inUl) out.push('</ul>');
+  if (inOl) out.push('</ol>');
+  html = out.join('\n');
+
+  // Paragraphs — wrap remaining plain lines (not already tags) into <p>
+  const blockTags = /^<(h1|h2|h3|ul|ol|li|blockquote|pre|hr)/;
+  html = html.split('\n\n').map(block => {
+    block = block.trim();
+    if (!block) return '';
+    if (blockTags.test(block) || block.startsWith('<pre') || block.includes('<li>')) return block;
+    return `<p>${block}</p>`;
+  }).join('\n');
+
+  return html;
+}
+
+const CAT_COLORS = {
+  cicd:'var(--accent)',kubernetes:'var(--teal)',docker:'var(--accent)',
+  aws:'var(--yellow)',security:'var(--red)',monitoring:'var(--green)',
+  linux:'var(--text2)',iac:'var(--orange)'
+};
+
+const TAG_CLASS = { cicd:'t-blue', kubernetes:'t-green', docker:'t-blue',
+  aws:'t-yellow', security:'t-red', monitoring:'t-green', linux:'t-blue', iac:'t-yellow' };
+
+function lvlTagClass(level) {
+  return {Beginner:'t-green',Intermediate:'t-yellow',Advanced:'t-red'}[level] || 't-green';
+}
+
+function renderArticle(a) {
+  document.title = `${a.title} — DevOps Hub`;
+  const tagClass = TAG_CLASS[a.category_slug] || 't-blue';
+
+  document.getElementById('content').innerHTML = `
+    <div class="art-meta">
+      <span class="tag ${tagClass}">${a.category || 'General'}</span>
+      <span class="tag ${lvlTagClass(a.level)}">${a.level}</span>
+      <span class="rtime">${a.read_time} min read</span>
+    </div>
+    <h1 class="art-title">${a.title}</h1>
+    ${a.excerpt ? `<p class="art-excerpt">${a.excerpt}</p>` : ''}
+    <div class="art-body">${renderMarkdown(a.content)}</div>
+    <div class="art-footer">
+      <button class="back-btn" onclick="location.href='index.html'">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3L5 8l5 5"/></svg>
+        Back to all articles
+      </button>
+    </div>
+  `;
+}
+
+function renderError(msg) {
+  document.getElementById('content').innerHTML = `
+    <div class="state-box">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+      <p style="font-size:16px;color:var(--text2);margin-bottom:18px">${msg}</p>
+      <button class="back-btn" onclick="location.href='index.html'">← Back to all articles</button>
+    </div>
+  `;
+}
+
+async function loadArticle() {
+  const params = new URLSearchParams(window.location.search);
+  const slug = params.get('slug');
+
+  if (!slug) {
+    renderError("No article specified.");
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API}/articles/${slug}`, { signal: AbortSignal.timeout(5000) });
+    if (!res.ok) throw new Error('not found');
+    const article = await res.json();
+    renderArticle(article);
+  } catch {
+    renderError("This article couldn't be loaded. It may have been removed.");
+  }
+}
+
+loadArticle();
+</script>
+</body>
+</html>
