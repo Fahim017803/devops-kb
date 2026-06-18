@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Loading article... — DevOps Hub</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0a;--bg2:#111111;--bg3:#1a1a1a;--bg4:#222222;
+  --border:#2a2a2a;--border2:#383838;
+  --text:#e8e8e8;--text2:#999;--text3:#666;
+  --accent:#4a9eff;--accent-bg:rgba(74,158,255,.12);
+  --green:#22c55e;--green-bg:rgba(34,197,94,.15);
+  --yellow:#eab308;--yellow-bg:rgba(234,179,8,.15);
+  --red:#ef4444;--red-bg:rgba(239,68,68,.15);
+  --orange:#f97316;--teal:#14b8a6;
+  --r:10px;--rs:6px;--max:700px;
+  --serif:'Iowan Old Style','Palatino Linotype',Georgia,'Times New Roman',serif
+}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;font-size:17px;line-height:1.75;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:100;background:rgba(10,10,10,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);height:56px;display:flex;align-items:center}
+.nav-inner{max-width:1120px;width:100%;margin:0 auto;padding:0 24px;display:flex;align-items:center;gap:28px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px;flex-shrink:0}
+.logo-icon{width:28px;height:28px;background:var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center}
+.logo-icon svg{width:16px;height:16px}
+.back-link{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:14px;color:var(--text2);padding:6px 12px;border-radius:var(--rs);transition:all .15s;cursor:pointer}
+.back-link:hover{color:var(--text);background:var(--bg3)}
+.back-link svg{width:14px;height:14px}
+
+/* HERO */
+.hero{position:relative;height:340px;overflow:hidden;display:flex;align-items:flex-end}
+.hero-bg{position:absolute;inset:0;z-index:0}
+.hero-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,10,10,0) 0%,rgba(10,10,10,.55) 55%,rgba(10,10,10,.96) 100%);z-index:1}
+.hero-content{position:relative;z-index:2;max-width:var(--max);margin:0 auto;padding:0 24px 36px;width:100%}
+.hero-kicker{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:14px}
+.hero-title{font-family:var(--serif);font-size:clamp(30px,5vw,46px);font-weight:600;line-height:1.18;letter-spacing:-.01em;color:#fff;text-shadow:0 2px 24px rgba(0,0,0,.4)}
+
+/* CONTAINER */
+.wrap{max-width:var(--max);margin:0 auto;padding:0 24px 100px}
+
+/* LOADING/ERROR */
+.state-box{text-align:center;padding:100px 24px;color:var(--text3)}
+.state-box svg{width:32px;height:32px;margin:0 auto 16px;opacity:.4}
+.skeleton{background:linear-gradient(90deg,var(--bg3) 25%,var(--bg4) 50%,var(--bg3) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:6px}
+@keyframes shimmer{to{background-position:-200% 0}}
+
+/* ARTICLE META ROW (under hero) */
+.art-meta-row{display:flex;align-items:center;gap:14px;padding:24px 0 22px;border-bottom:1px solid var(--border);margin-bottom:36px;flex-wrap:wrap}
+.tag{display:inline-flex;align-items:center;padding:5px 12px;border-radius:5px;font-size:12px;font-weight:600;letter-spacing:.02em}
+.t-blue{background:var(--accent-bg);color:var(--accent)}
+.t-green{background:var(--green-bg);color:var(--green)}
+.t-yellow{background:var(--yellow-bg);color:var(--yellow)}
+.t-red{background:var(--red-bg);color:var(--red)}
+.rtime{font-size:13px;color:var(--text3);margin-left:auto}
+.art-excerpt{font-family:var(--serif);font-size:21px;line-height:1.55;color:#cfcfcf;font-weight:400;margin-bottom:8px;letter-spacing:.01em}
+
+/* ARTICLE BODY (rendered markdown) */
+.art-body{font-size:17.5px}
+.art-body h1{font-family:var(--serif);font-size:30px;font-weight:600;color:#fff;margin:48px 0 18px;letter-spacing:-.01em;line-height:1.25}
+.art-body h2{font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin:52px 0 18px;padding-top:4px}
+.art-body h3{font-family:var(--serif);font-size:22px;font-weight:600;color:#fff;margin:34px 0 14px;line-height:1.3}
+.art-body p{margin-bottom:20px;color:#d4d4d4}
+.art-body ul,.art-body ol{margin:0 0 20px 22px;color:#d4d4d4}
+.art-body li{margin-bottom:10px}
+.art-body code{background:var(--bg3);border:1px solid var(--border);padding:2px 6px;border-radius:4px;font-size:14px;font-family:'SF Mono',Monaco,monospace;color:#e8b34a}
+.art-body pre{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;margin-bottom:24px;overflow-x:auto}
+.art-body pre code{background:none;border:none;padding:0;color:#9cdcfe;font-size:13.5px;line-height:1.6}
+.art-body blockquote{font-family:var(--serif);font-size:22px;line-height:1.5;border-left:3px solid var(--accent);padding:6px 0 6px 22px;color:#eee;margin:32px 0;font-style:italic}
+.art-body a{color:var(--accent);text-decoration:underline;text-decoration-color:var(--accent-bg)}
+.art-body strong{color:#fff;font-weight:600}
+.art-body hr{border:none;border-top:1px solid var(--border);margin:40px 0}
+.art-body img{max-width:100%;border-radius:var(--r);margin:24px 0}
+.art-body table{width:100%;border-collapse:collapse;margin-bottom:24px;font-size:15px}
+.art-diagram{margin:32px 0;padding:20px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r)}
+.art-diagram svg{width:100%;height:auto;display:block}
+.art-diagram text{fill:#d4d4d4;font-family:inherit}
+.art-diagram .th{font-weight:600;fill:#fff;font-size:13px}
+.art-diagram .ts{font-size:11.5px;fill:#999}
+.art-body th,.art-body td{padding:11px 14px;border:1px solid var(--border);text-align:left}
+.art-body th{background:var(--bg3);color:var(--text2);font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:.03em}
+
+/* First paragraph after excerpt gets a touch more presence */
+.art-body > p:first-of-type{font-size:18.5px;color:#e8e8e8}
+
+/* FOOTER NAV */
+.art-footer{margin-top:56px;padding-top:36px;border-top:1px solid var(--border)}
+.back-btn{display:inline-flex;align-items:center;gap:8px;padding:11px 22px;border-radius:var(--rs);border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:14px;cursor:pointer;transition:all .15s;margin-bottom:40px}
+.back-btn:hover{background:var(--bg4)}
+.back-btn svg{width:14px;height:14px}
+
+/* MORE ARTICLES CARD */
+.more-section{margin-top:8px}
+.more-label{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:16px}
+.more-grid{display:grid;gap:12px}
+.more-card{display:flex;gap:14px;padding:16px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);cursor:pointer;transition:border-color .15s}
+.more-card:hover{border-color:var(--border2)}
+.more-card-icon{width:40px;height:40px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.more-card-icon svg{width:20px;height:20px}
+.more-card h4{font-size:14.5px;font-weight:600;color:#fff;margin-bottom:4px;line-height:1.4}
+.more-card p{font-size:13px;color:var(--text3)}
+
+@media (max-width:600px){
+  .hero{height:260px}
+  .art-meta-row{flex-wrap:wrap}
+  .rtime{margin-left:0;width:100%}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="index.html" class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="2" width="12" height="12" rx="2"/><rect x="5" y="5" width="6" height="6" rx="1"/>
+        </svg>
+      </div>
+      DevOps Hub
+    </a>
+    <a href="index.html" class="back-link">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3L5 8l5 5"/></svg>
+      All articles
+    </a>
+  </div>
+</nav>
+
+<div class="hero" id="heroSection" style="display:none">
+  <div class="hero-bg" id="heroBg"></div>
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <div class="hero-kicker" id="heroKicker"></div>
+    <h1 class="hero-title" id="heroTitle"></h1>
+  </div>
+</div>
+
+<div class="wrap" id="content">
+  <!-- Loading skeleton -->
+  <div id="loadingState">
+    <div class="skeleton" style="height:24px;width:120px;margin:32px 0 20px"></div>
+    <div class="skeleton" style="height:44px;width:90%;margin-bottom:14px"></div>
+    <div class="skeleton" style="height:44px;width:60%;margin-bottom:24px"></div>
+    <div class="skeleton" style="height:18px;width:100%;margin-bottom:10px"></div>
+    <div class="skeleton" style="height:18px;width:100%;margin-bottom:10px"></div>
+    <div class="skeleton" style="height:18px;width:80%;margin-bottom:30px"></div>
+  </div>
+</div>
+
+<script>
+const API = '/api';
+
+const MOCK_ARTICLE = {
+  title: "Building a production-grade CI/CD pipeline with GitHub Actions, Docker, and self-hosted runners",
+  slug: "production-cicd-github-actions",
+  excerpt: "A complete walkthrough of setting up parallel security scanning, staged deployments with manual approval gates, and automated rollback strategies.",
+  level: "Intermediate",
+  read_time: 12,
+  category: "CI/CD",
+  category_slug: "cicd",
+  content: "Imagine you own a restaurant. Every time you create a new dish, you have three jobs: cook it (**development**), make sure it's safe to eat (**security**), and actually serve it to customers (**operations**). \n\nMost restaurants do this badly \u2014 the chef cooks, then *much later* someone checks if it's safe, then *even later* a waiter serves it. If something's wrong, customers have already been served before anyone notices.\n\nDevSecOps is what happens when you redesign the kitchen so that **safety checks happen while the food is being cooked**, not after. And when it's ready, it's served automatically \u2014 no one has to remember to do it manually.\n\nThat's the whole idea. Now let's build the kitchen.\n\n## The old way vs the new way\n\n| The Old Way | DevSecOps Way |\n|---|---|\n| One person codes, hands it off, another person deploys it manually \u2014 could take days | You push code, and within minutes it's tested and live |\n| Security is checked at the very end, like a final inspection | Security is checked on *every single change*, immediately |\n| If something breaks in production, you find out from angry users | You're monitoring constantly, so you often catch it first |\n| Undoing a bad deploy means scrambling and guessing | Every version is saved \u2014 you can instantly go back to any previous one |\n\nNetflix, Amazon, and Google all run their systems this way. Thousands of changes go live every single day, and a human almost never has to manually do any of it.\n\n## The big picture \u2014 what we're actually building\n\nBefore touching any code, let's understand the *shape* of the whole system. Think of it like a delivery route a package takes \u2014 from \"you wrote some code\" to \"it's live on the internet.\"\n\n[[DIAGRAM:big_picture]]\n\nNobody manually does steps 1 through 6. You just type `git push`, and a robot does the rest. **That robot is GitHub Actions**, and teaching it what to do is what most of this guide is about.\n\n### Meet the cast of characters\n\nBefore the steps, here's everyone involved, in plain terms:\n\n[[DIAGRAM:cast]]\n\n| Name | What it actually is | Think of it as... |\n|---|---|---|\n| **EC2** | A computer in Amazon's data center that's always on | Renting a desk in someone else's office, except it's a whole computer |\n| **Docker** | A way to package your app + everything it needs into one sealed box | A shipping container \u2014 same box works on any ship, any truck |\n| **Docker Hub** | A storage warehouse for those sealed boxes | Like a locker room where you store boxes until needed |\n| **GitHub Actions** | A robot that watches your code and runs tasks automatically | An assembly line worker who never sleeps |\n| **A \"runner\"** | The actual computer where GitHub Actions' robot does its work | The workbench the robot worker stands at |\n| **nginx** | Software that receives visitors and shows them your website | The receptionist at the front desk, directing people |\n| **SSL / HTTPS** | Encryption so nobody can spy on traffic to your site | A locked, sealed envelope instead of a postcard anyone can read |\n| **DNS** | Translates a domain name (like google.com) into a server's actual address | A phonebook \u2014 name in, number out |\n\nKeep this table nearby. Every section below is really just teaching one of these characters to do its job properly.\n\n## Step 1: Get yourself a computer that's always on (EC2)\n\nYou can't deploy a website without somewhere for it to live. EC2 is Amazon's \"rent a computer\" service. You don't touch any physical hardware \u2014 you just click a few buttons and a virtual computer appears, reachable from anywhere on the internet.\n\n**You'll actually want two of these** \u2014 one as a \"practice\" server (staging) where you test changes safely, and one as the \"real\" server (production) that actual visitors see. Same setup, just two copies.\n\n**How to launch one:**\n- AWS Console \u2192 EC2 \u2192 Launch Instance\n- Pick Ubuntu as the operating system (a free, popular choice)\n- Pick `t2.micro` as the size \u2014 it's free for the first year and plenty for learning\n- Allow these three doors to be open: SSH (so *you* can log in), HTTP, and HTTPS (so *visitors* can reach it)\n- Click launch, and note down the IP address it gives you \u2014 that's its address on the internet\n\n**Logging in for the first time:**\n\nThink of the `.pem` file AWS gives you as a physical key. You need to tell your computer \"only I should be allowed to use this key\":\n\n```bash\nchmod 400 your-key.pem\nssh -i \"your-key.pem\" ubuntu@<the IP address>\n```\n\nIf that works, you're now sitting at a command line \u2014 except it's not your laptop, it's the EC2 computer, even though it might be on the other side of the world.\n\n**A couple of one-time settings**, so things go smoothly later:\n\n```bash\n# Stops git from complaining later about how to merge changes\ngit config --global pull.rebase false\n\n# Lets our automated robot run admin commands without asking for a password each time\necho \"ubuntu ALL=(ALL) NOPASSWD: ALL\" | sudo tee /etc/sudoers.d/ubuntu\n```\n\n**If something goes wrong:**\n\n| What you see | What it means | What to do |\n|---|---|---|\n| \"Permission denied (publickey)\" | Your key file has the wrong permissions | Run the `chmod 400` command again |\n| \"Connection timed out\" | The door (port 22) isn't open | Go back to AWS, open port 22 in the security settings |\n| \"Host key verification failed\" | You connected to this IP before, but it's a different machine now | Run `ssh-keygen -R <the IP>` to forget the old one |\n\n## Step 2: Teach the computer to run sealed boxes (Docker)\n\nHere's the classic problem Docker solves: \"it works on my computer, but not on the server.\" That happens because your computer has different software versions, settings, files lying around \u2014 a million tiny differences.\n\nDocker's answer: don't just send your *code*, send a **sealed box** containing your code *and* everything it needs to run, exactly as is. That box runs identically anywhere \u2014 your laptop, the staging server, the production server, doesn't matter.\n\n**Installing it properly** (skip the shortcut `apt install docker.io` \u2014 it gives you an outdated version):\n\n```bash\nsudo apt-get update\nsudo apt-get install -y ca-certificates curl gnupg\n\nsudo install -m 0755 -d /etc/apt/keyrings\ncurl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg\nsudo chmod a+r /etc/apt/keyrings/docker.gpg\n\necho \"deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo \"$VERSION_CODENAME\") stable\" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null\n\nsudo apt-get update\nsudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin\n\n# So you don't have to type \"sudo\" before every docker command\nsudo usermod -aG docker ubuntu\nnewgrp docker\n```\n\n**Check it worked:**\n\n```bash\ndocker run hello-world\n```\n\nIf you see a friendly \"Hello from Docker!\" message, the sealed-box machine is ready.\n\n## Step 3: Give GitHub a worker on your own computer (the \"runner\")\n\nNormally, when GitHub Actions wants to run a task, it spins up a *temporary* computer somewhere in the cloud, does the work, then throws that computer away. That's fine for testing code \u2014 but for *deploying* to your specific EC2 server, you need the work to actually happen *on* that server.\n\nThe solution: install a small program on your EC2 called a **runner**. It's like giving GitHub Actions its own employee badge to your office \u2014 now it can ask \"hey, can someone at this specific desk do this task?\" and your EC2 says \"yes, that's me.\"\n\n```bash\nmkdir -p ~/actions-runner && cd ~/actions-runner\n\n# Get this exact command from: GitHub repo \u2192 Settings \u2192 Actions \u2192 Runners \u2192 New self-hosted runner\ncurl -o actions-runner-linux-x64.tar.gz -L <the URL GitHub gives you>\ntar xzf ./actions-runner-linux-x64.tar.gz\n\n./config.sh --url https://github.com/<you>/<your-repo> --token <the token GitHub gives you>\n\n# Make it run permanently in the background, even after you log out\nsudo ./svc.sh install\nsudo ./svc.sh start\n```\n\n**The one step everyone forgets \u2014 and it breaks everything if you skip it:**\n\nYou need to label your runner, like putting a name tag on the employee. Go to GitHub \u2192 Settings \u2192 Runners \u2192 click your runner \u2192 add a label like `staging` or `production`. Later, your workflow will say \"I need someone with the `staging` badge\" \u2014 and if nobody has that badge, the job just waits forever, doing nothing, with no error message. This single missing label is the #1 reason beginners get stuck.\n\n| What you see | What it means | What to do |\n|---|---|---|\n| Job stuck on \"Queued\" forever | No runner has the label the job is asking for | Add the matching label to your runner |\n| \"A session already exists\" | You accidentally started the runner twice | Stop it, then start it again cleanly with `svc.sh` |\n\n## Step 4: Give the robot a secret password, safely (Secrets)\n\nYour automated pipeline needs to log into Docker Hub to store and retrieve your sealed boxes. That requires a password. But you should **never** type a real password directly into a file that other people might see (especially if your code is public on GitHub).\n\nGitHub's solution is called **Secrets** \u2014 an encrypted vault. You put the password in once, give it a name, and your workflow can use it by name without ever displaying the actual value.\n\n| Type | Name | What goes here | Why this type |\n|---|---|---|---|\n| Secret (hidden) | `DOCKERHUB_TOKEN` | A Docker Hub access token | Sensitive \u2014 should never be visible |\n| Variable (plain) | `DOCKERHUB_USER` | Your Docker Hub username | Not sensitive \u2014 just a username |\n\nYou'll also set up two **environments** \u2014 staging and production \u2014 and on production specifically, you check a box that says \"require approval before deploying here.\" This means even if all the automated checks pass, a real human still has to click \"yes, go ahead\" before anything reaches your actual live website. It's your safety net.\n\n## Step 5: Write the blueprints (config files)\n\nThree small files describe exactly how your sealed box should be built and run. Think of these as architectural blueprints \u2014 they don't *do* anything by themselves, they just describe what should happen.\n\n**The Dockerfile** \u2014 instructions for building the box:\n\n```dockerfile\nFROM nginx:alpine\nCOPY index.html /usr/share/nginx/html/index.html\nEXPOSE 80\n```\n\nThis says: \"start with a tiny pre-made web server (nginx), put my website file inside it, and let it listen on door number 80.\"\n\nOne subtle trap: don't write `EXPOSE 443` here, even though 443 is the \"secure\" door. The certificate needed for security isn't ready yet at this stage \u2014 adding it too early causes a confusing startup crash. We open that door later, in a different file.\n\n**docker-compose.yml** \u2014 instructions for *running* the box on production:\n\n```yaml\nservices:\n  web:\n    image: yourusername/yourapp:latest\n    ports:\n      - \"80:80\"\n      - \"443:443\"\n    volumes:\n      - /etc/letsencrypt:/etc/letsencrypt:ro\n      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro\n    restart: always\n```\n\nThis says: \"run my sealed box, open doors 80 and 443, and let it borrow my security certificate files.\" Both the `443` line and the certificate-borrowing line are required together \u2014 if you only do one, secure browsing silently fails.\n\nStaging gets a simpler version of this file with no certificate and no door 443 \u2014 it's just a practice server, it doesn't need to be locked down.\n\n**nginx.conf** \u2014 instructions for the receptionist (nginx) on how to greet visitors:\n\n```nginx\nserver {\n    listen 80;\n    server_name yourdomain.com;\n    return 301 https://$host$request_uri;\n}\n\nserver {\n    listen 443 ssl;\n    server_name yourdomain.com;\n    ssl_certificate /etc/letsencrypt/live/yourdomain.com/fullchain.pem;\n    ssl_certificate_key /etc/letsencrypt/live/yourdomain.com/privkey.pem;\n    ssl_protocols TLSv1.2 TLSv1.3;\n\n    add_header X-Frame-Options \"DENY\";\n    add_header X-Content-Type-Options \"nosniff\";\n    add_header Strict-Transport-Security \"max-age=31536000; includeSubDomains\";\n\n    location / {\n        root /usr/share/nginx/html;\n        index index.html;\n    }\n}\n```\n\nIn plain words: \"if someone arrives through the insecure door (80), politely redirect them to the secure one (443). On the secure door, use these certificate files to encrypt everything, add a few safety headers, then show them the website.\"\n\n## Step 6: Teach the robot the actual recipe (the workflow files)\n\nThis is the heart of the whole system \u2014 a file that tells GitHub Actions exactly what to do, in what order, every time you push code.\n\nPicture an assembly line with several quality inspectors standing side by side, all checking different things *at the same time* (not one after another, which would be slow):\n\n[[DIAGRAM:pipeline]]\n\nAfter the production deploy in that picture, two more checks run automatically on the live site: a security scan and a performance scan \u2014 catching anything that only shows up once the site is actually live.\n\nThe \"master\" file that organizes all of this:\n\n```yaml\nname: DevSecOps Pipeline\non:\n  push:\n    branches: [main, staging]\n\njobs:\n  secret-scan:\n    uses: ./.github/workflows/secret-scan.yml\n    secrets: inherit\n\n  code-quality:\n    uses: ./.github/workflows/code-quality.yml\n    secrets: inherit\n\n  docker-lint:\n    uses: ./.github/workflows/docker-lint.yml\n    secrets: inherit\n\n  dependency-scan:\n    uses: ./.github/workflows/dependencies-scan.yml\n    secrets: inherit\n\n  build:\n    needs: [secret-scan, code-quality, docker-lint, dependency-scan]\n    uses: ./.github/workflows/docker-push.yml\n    secrets: inherit\n```\n\nThe important word here is `needs:`. It's the rule that says \"don't even start building until all four inspectors have given a thumbs up.\" If even one fails, the build step never runs \u2014 bad code physically cannot reach your server. This is called **fail-fast**, and it's one of the most valuable habits in this whole setup.\n\n**The deploy-to-staging file:**\n\n```yaml\nname: Deploy Staging\non:\n  workflow_run:\n    workflows: [\"DevSecOps Pipeline\"]\n    types: [completed]\n\njobs:\n  deploy:\n    runs-on: [self-hosted, Linux, X64, staging]\n    environment: staging\n    if: github.event.workflow_run.conclusion == 'success'\n    steps:\n      - uses: actions/checkout@v4\n      - uses: docker/login-action@v3\n        with:\n          username: ${{ vars.DOCKERHUB_USER }}\n          password: ${{ secrets.DOCKERHUB_TOKEN }}\n      - run: |\n          docker compose -f docker-compose.staging.yml down\n          docker compose -f docker-compose.staging.yml pull\n          docker compose -f docker-compose.staging.yml up -d\n```\n\nNotice `runs-on: [..., staging]` \u2014 that's GitHub looking for a runner with the `staging` badge we discussed earlier. This is exactly where that label matters.\n\nProduction's version is almost identical, except instead of running automatically, it waits for you to manually click a button \u2014 that's your approval gate doing its job.\n\n**One genuinely confusing rule worth knowing in advance:** GitHub always reads these workflow files from your `main` branch, even if you're actively testing changes on a different branch called `staging`. If you edit a workflow file on staging and it doesn't seem to take effect, this is almost always why \u2014 you need to merge your changes into `main` first.\n\n| What you see | What it means | What to do |\n|---|---|---|\n| \"workflow is not reusable\" | One of the smaller files is missing a line that says it's allowed to be called by another | Add `workflow_call:` to that file |\n| Staging deploy shows \"Skipped\" | The workflow file isn't on the `main` branch yet | Merge your branch into `main` |\n| Build runs even though a scan failed | The `needs:` line is missing | Add it back in |\n\n## Step 7: Lock the front door (SSL with Let's Encrypt)\n\nWithout SSL, anyone between your visitor and your server can read everything being sent \u2014 like writing a letter on a postcard instead of sealing it in an envelope. SSL is the envelope. Let's Encrypt gives these \"envelopes\" (certificates) away for free, and a tool called Certbot handles getting and installing them.\n\n**One thing must be true before you start:** your domain name needs to already be pointing at your server's address (we'll cover that next). Certbot proves you own the domain by checking this.\n\n```bash\nsudo apt-get install -y certbot\n\n# Free up door 80 temporarily so certbot can use it to prove ownership\ndocker compose down\n\nsudo certbot certonly --standalone -d yourdomain.com\n\n# Without this step, your sealed box won't be allowed to read the new certificate files\nsudo chown -R ubuntu:ubuntu /etc/letsencrypt/\nsudo chmod -R 755 /etc/letsencrypt/\n\ndocker compose up -d\n```\n\nThat permission-fixing step is small but easy to forget \u2014 and when you do forget it, the symptom is confusing: everything *looks* fine, the container starts, but door 443 quietly never opens. The container simply isn't allowed to read the certificate, so it gives up on that part silently.\n\n| What you see | What it means | What to do |\n|---|---|---|\n| Certbot times out | Either DNS isn't ready yet, or door 80 is still busy | Double check DNS, make sure `docker compose down` ran first |\n| \"too many failed authorizations\" | You tried and failed 5 times within an hour (Let's Encrypt's limit) | Just wait \u2014 the error message tells you exactly when you can try again |\n| Door 443 missing after deploying | The certificate files aren't readable | Re-run the `chown` command above |\n\n## Step 8: Make sure your address never changes (Elastic IP + DNS)\n\nHere's a frustrating default behavior: every time you restart your EC2 server, AWS gives it a **brand new IP address**. If your domain is pointing at the old one, your site silently breaks until you notice and fix it.\n\nThe fix is called an **Elastic IP** \u2014 think of it as reserving a permanent phone number for your server, instead of getting a new random number every time you restart.\n\n```\nAWS Console \u2192 EC2 \u2192 Elastic IPs \u2192 Allocate \u2192 Associate with your server\nThen go to your domain provider (Namecheap, etc.) and point your domain at this new permanent address\n```\n\nIt costs nothing as long as it's actively attached to a running server \u2014 it only starts costing money if you reserve one and then leave it unused.\n\n## Putting it all together \u2014 your actual daily routine\n\nOnce everything above is wired up, here's what using it actually looks like day to day. Notice how short this is \u2014 all that setup was so that *this* part stays simple:\n\n```bash\ngit checkout staging\n# make your changes\ngit add .\ngit commit -m \"describe what you changed\"\ngit push origin staging\n\n# wait a few minutes, watch GitHub Actions turn green\n# open the staging URL, check it looks right\n\n# happy with it? merge staging into main, then:\n# GitHub \u2192 Actions tab \u2192 Deploy Production \u2192 Run \u2192 Approve\n```\n\nThat's it. Write code, push, watch lights turn green, click approve. Everything else happens by itself.\n\n## When something breaks \u2014 how to actually debug it\n\nDon't guess randomly when something goes wrong. Work through these layers **in this exact order** \u2014 almost every problem reveals itself in the first two steps:\n\n[[DIAGRAM:debug_layers]]\n\nMost \"mysterious\" problems turn out to be one of these familiar suspects:\n\n- **The container keeps restarting in a loop** \u2192 almost always means the production blueprint (with SSL) got used on the staging server by mistake, and it's crashing trying to find certificates that don't exist there\n- **It works when you test from the server itself, but not in your browser** \u2192 your browser may have cached an old, insecure version of the page; try an incognito window\n- **Git refuses to let you push** \u2192 someone (possibly past-you) made changes you don't have locally yet; pull first, then push\n- **GitHub says your workflow file has an error** \u2192 multi-line code blocks in YAML can't contain `#` comments inside them \u2014 remove any comments from inside those blocks\n\n## Why this is worth learning properly\n\nEvery piece here \u2014 separate testing and live environments, a required human approval before anything goes live, multiple security checks running in parallel, and the ability to instantly roll back to any previous version \u2014 is exactly how real engineering teams operate, just at a larger scale. \n\nThere's nothing toy-like about this setup. A self-hosted runner, staged deployments, parallel security scanning, and a genuine approval gate is a fair description of what keeps large production systems both fast *and* safe.\n\n## Where to go after this\n\n| If you want to... | Learn this next |\n|---|---|\n| Get notified the moment a deploy happens | Add a Slack or email notification step |\n| Recover instantly from a bad deploy | Build a \"rollback to previous version\" workflow |\n| Stop manually clicking through AWS setup | Learn Terraform \u2014 it lets you describe your servers in code |\n| Run many containers across many machines | Learn Kubernetes \u2014 this whole guide was about *one* server; Kubernetes is for managing fleets of them |\n| Go even further with Kubernetes | Look into ArgoCD \u2014 deployments driven entirely by what's in your git repo |\n\nYou don't need to learn all of this at once. Get comfortable with everything above first \u2014 it's a complete, real system on its own.\n"
+};
+
+
+// ── Embedded diagrams (referenced via [[DIAGRAM:name]] in article content) ──
+const DIAGRAMS = {
+
+big_picture: `<svg viewBox="0 0 680 470" style="width:100%">
+<defs><marker id="a1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#888" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<rect x="240" y="20" width="200" height="56" rx="8" fill="#2a2a2a" stroke="#444" stroke-width="1"/>
+<text x="340" y="42" text-anchor="middle" font-size="13" font-weight="600" fill="#fff">Your computer</text>
+<text x="340" y="60" text-anchor="middle" font-size="11.5" fill="#999">git push origin staging</text>
+<line x1="340" y1="76" x2="340" y2="110" stroke="#888" stroke-width="1.5" marker-end="url(#a1)"/>
+<rect x="200" y="110" width="280" height="56" rx="8" fill="#2d2740" stroke="#534ab7" stroke-width="1"/>
+<text x="340" y="132" text-anchor="middle" font-size="13" font-weight="600" fill="#cecbf6">GitHub Actions</text>
+<text x="340" y="150" text-anchor="middle" font-size="11.5" fill="#a89fe0">the robot worker, wakes up automatically</text>
+<line x1="340" y1="166" x2="340" y2="200" stroke="#888" stroke-width="1.5" marker-end="url(#a1)"/>
+<rect x="200" y="200" width="280" height="56" rx="8" fill="#3a2620" stroke="#d85a30" stroke-width="1"/>
+<text x="340" y="222" text-anchor="middle" font-size="13" font-weight="600" fill="#f5c4b3">Scan, build, scan again</text>
+<text x="340" y="240" text-anchor="middle" font-size="11.5" fill="#e0a589">security checks, then seal the box</text>
+<line x1="340" y1="256" x2="340" y2="290" stroke="#888" stroke-width="1.5" marker-end="url(#a1)"/>
+<rect x="200" y="290" width="280" height="56" rx="8" fill="#163530" stroke="#0f6e56" stroke-width="1"/>
+<text x="340" y="312" text-anchor="middle" font-size="13" font-weight="600" fill="#9fe1cb">Docker Hub</text>
+<text x="340" y="330" text-anchor="middle" font-size="11.5" fill="#6fc6a8">the warehouse — sealed box stored here</text>
+<path d="M340 346 L340 364 L220 364 L220 380" fill="none" stroke="#888" stroke-width="1.5" marker-end="url(#a1)"/>
+<path d="M340 346 L340 364 L460 364 L460 380" fill="none" stroke="#888" stroke-width="1.5" marker-end="url(#a1)"/>
+<text x="160" y="362" text-anchor="middle" font-size="11.5" fill="#999">automatic</text>
+<text x="520" y="362" text-anchor="middle" font-size="11.5" fill="#999">you click approve</text>
+<rect x="120" y="380" width="200" height="56" rx="8" fill="#3a2e10" stroke="#854f0b" stroke-width="1"/>
+<text x="220" y="402" text-anchor="middle" font-size="13" font-weight="600" fill="#fac775">Staging server</text>
+<text x="220" y="420" text-anchor="middle" font-size="11.5" fill="#d9a85f">auto-deployed, for testing</text>
+<rect x="360" y="380" width="200" height="56" rx="8" fill="#3a2e10" stroke="#854f0b" stroke-width="1"/>
+<text x="460" y="402" text-anchor="middle" font-size="13" font-weight="600" fill="#fac775">Production server</text>
+<text x="460" y="420" text-anchor="middle" font-size="11.5" fill="#d9a85f">real visitors, needs your approval</text>
+</svg>`,
+
+cast: `<svg viewBox="0 0 680 420" style="width:100%">
+<rect x="40" y="40" width="190" height="100" rx="10" fill="#1c2e42" stroke="#185fa5" stroke-width="1"/>
+<text x="135" y="66" text-anchor="middle" font-size="13" font-weight="600" fill="#85b7eb">EC2</text>
+<text x="135" y="92" text-anchor="middle" font-size="11.5" fill="#9bb8d4">a computer that's</text>
+<text x="135" y="108" text-anchor="middle" font-size="11.5" fill="#9bb8d4">always on</text>
+<text x="135" y="128" text-anchor="middle" font-size="11.5" fill="#6f8aa8" font-style="italic">like renting a desk</text>
+<rect x="245" y="40" width="190" height="100" rx="10" fill="#163530" stroke="#0f6e56" stroke-width="1"/>
+<text x="340" y="66" text-anchor="middle" font-size="13" font-weight="600" fill="#9fe1cb">Docker</text>
+<text x="340" y="92" text-anchor="middle" font-size="11.5" fill="#7fc3aa">packages your app</text>
+<text x="340" y="108" text-anchor="middle" font-size="11.5" fill="#7fc3aa">into a sealed box</text>
+<text x="340" y="128" text-anchor="middle" font-size="11.5" fill="#5a9684" font-style="italic">a shipping container</text>
+<rect x="450" y="40" width="190" height="100" rx="10" fill="#2d2740" stroke="#534ab7" stroke-width="1"/>
+<text x="545" y="66" text-anchor="middle" font-size="13" font-weight="600" fill="#cecbf6">GitHub Actions</text>
+<text x="545" y="92" text-anchor="middle" font-size="11.5" fill="#a89fe0">runs tasks</text>
+<text x="545" y="108" text-anchor="middle" font-size="11.5" fill="#a89fe0">automatically</text>
+<text x="545" y="128" text-anchor="middle" font-size="11.5" fill="#8077ab" font-style="italic">a worker who never sleeps</text>
+<rect x="40" y="165" width="190" height="100" rx="10" fill="#3a2620" stroke="#d85a30" stroke-width="1"/>
+<text x="135" y="191" text-anchor="middle" font-size="13" font-weight="600" fill="#f5c4b3">A runner</text>
+<text x="135" y="217" text-anchor="middle" font-size="11.5" fill="#e0a589">where the robot</text>
+<text x="135" y="233" text-anchor="middle" font-size="11.5" fill="#e0a589">does its work</text>
+<text x="135" y="253" text-anchor="middle" font-size="11.5" fill="#b87f60" font-style="italic">the robot's workbench</text>
+<rect x="245" y="165" width="190" height="100" rx="10" fill="#3a2e10" stroke="#854f0b" stroke-width="1"/>
+<text x="340" y="191" text-anchor="middle" font-size="13" font-weight="600" fill="#fac775">nginx</text>
+<text x="340" y="217" text-anchor="middle" font-size="11.5" fill="#d9a85f">greets visitors,</text>
+<text x="340" y="233" text-anchor="middle" font-size="11.5" fill="#d9a85f">shows your site</text>
+<text x="340" y="253" text-anchor="middle" font-size="11.5" fill="#a87f44" font-style="italic">the front-desk receptionist</text>
+<rect x="450" y="165" width="190" height="100" rx="10" fill="#1f3508" stroke="#3b6d11" stroke-width="1"/>
+<text x="545" y="191" text-anchor="middle" font-size="13" font-weight="600" fill="#c0dd97">SSL / HTTPS</text>
+<text x="545" y="217" text-anchor="middle" font-size="11.5" fill="#a3c479" font-style="normal">encrypts traffic</text>
+<text x="545" y="233" text-anchor="middle" font-size="11.5" fill="#a3c479">to your site</text>
+<text x="545" y="253" text-anchor="middle" font-size="11.5" fill="#7d9c5a" font-style="italic">a sealed envelope</text>
+<rect x="245" y="290" width="190" height="100" rx="10" fill="#3d1f2c" stroke="#993556" stroke-width="1"/>
+<text x="340" y="316" text-anchor="middle" font-size="13" font-weight="600" fill="#f4c0d1">DNS</text>
+<text x="340" y="342" text-anchor="middle" font-size="11.5" fill="#d99cb2" font-style="normal">turns a domain name</text>
+<text x="340" y="358" text-anchor="middle" font-size="11.5" fill="#d99cb2">into a server address</text>
+<text x="340" y="378" text-anchor="middle" font-size="11.5" fill="#a8748a" font-style="italic">a phonebook</text>
+</svg>`,
+
+pipeline: `<svg viewBox="0 0 680 400" style="width:100%">
+<defs><marker id="a2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#888" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<rect x="260" y="20" width="160" height="44" rx="8" fill="#2a2a2a" stroke="#444" stroke-width="1"/>
+<text x="340" y="46" text-anchor="middle" font-size="13" font-weight="600" fill="#fff">You push code</text>
+<line x1="340" y1="64" x2="340" y2="90" stroke="#888" stroke-width="1.5" marker-end="url(#a2)"/>
+<text x="340" y="86" text-anchor="middle" font-size="11.5" fill="#999">four checks, all at once</text>
+<rect x="40" y="100" width="135" height="56" rx="8" fill="#3a2620" stroke="#d85a30" stroke-width="1"/>
+<text x="107" y="124" text-anchor="middle" font-size="13" font-weight="600" fill="#f5c4b3">Secret scan</text>
+<text x="107" y="142" text-anchor="middle" font-size="11.5" fill="#e0a589">no leaked passwords?</text>
+<rect x="187" y="100" width="135" height="56" rx="8" fill="#3a2620" stroke="#d85a30" stroke-width="1"/>
+<text x="254" y="124" text-anchor="middle" font-size="13" font-weight="600" fill="#f5c4b3">Code quality</text>
+<text x="254" y="142" text-anchor="middle" font-size="11.5" fill="#e0a589">clean and consistent?</text>
+<rect x="334" y="100" width="135" height="56" rx="8" fill="#3a2620" stroke="#d85a30" stroke-width="1"/>
+<text x="401" y="124" text-anchor="middle" font-size="13" font-weight="600" fill="#f5c4b3">Docker lint</text>
+<text x="401" y="142" text-anchor="middle" font-size="11.5" fill="#e0a589">no Dockerfile mistakes?</text>
+<rect x="481" y="100" width="159" height="56" rx="8" fill="#3a2620" stroke="#d85a30" stroke-width="1"/>
+<text x="560" y="124" text-anchor="middle" font-size="13" font-weight="600" fill="#f5c4b3">Dependency scan</text>
+<text x="560" y="142" text-anchor="middle" font-size="11.5" fill="#e0a589">no known vulnerabilities?</text>
+<path d="M107 156 L107 180 L340 180 L340 194" fill="none" stroke="#888" stroke-width="1.5" marker-end="url(#a2)"/>
+<path d="M254 156 L254 180 L340 180" fill="none" stroke="#888" stroke-width="1.5"/>
+<path d="M401 156 L401 180 L340 180" fill="none" stroke="#888" stroke-width="1.5"/>
+<path d="M560 156 L560 180 L340 180" fill="none" stroke="#888" stroke-width="1.5"/>
+<text x="340" y="190" text-anchor="middle" font-size="11.5" fill="#999">all four must pass</text>
+<rect x="240" y="200" width="200" height="50" rx="8" fill="#3a2e10" stroke="#854f0b" stroke-width="1"/>
+<text x="340" y="222" text-anchor="middle" font-size="13" font-weight="600" fill="#fac775">Build the sealed box</text>
+<text x="340" y="240" text-anchor="middle" font-size="11.5" fill="#d9a85f">only if everything passed</text>
+<line x1="340" y1="250" x2="340" y2="276" stroke="#888" stroke-width="1.5" marker-end="url(#a2)"/>
+<rect x="240" y="276" width="200" height="50" rx="8" fill="#163530" stroke="#0f6e56" stroke-width="1"/>
+<text x="340" y="298" text-anchor="middle" font-size="13" font-weight="600" fill="#9fe1cb">Deploy to staging</text>
+<text x="340" y="316" text-anchor="middle" font-size="11.5" fill="#7fc3aa">automatic, for testing</text>
+<line x1="340" y1="326" x2="340" y2="352" stroke="#888" stroke-width="1.5" marker-end="url(#a2)"/>
+<rect x="240" y="352" width="200" height="34" rx="8" fill="#2d2740" stroke="#534ab7" stroke-width="1"/>
+<text x="340" y="373" text-anchor="middle" font-size="13" font-weight="600" fill="#cecbf6">You approve → production</text>
+</svg>`,
+
+debug_layers: `<svg viewBox="0 0 680 410" style="width:100%">
+<defs><marker id="a3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#888" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<rect x="140" y="20" width="400" height="56" rx="8" fill="#4a1b1b" stroke="#a32d2d" stroke-width="1"/>
+<text x="160" y="44" font-size="13" font-weight="600" fill="#f7c1c1">1. Config files first</text>
+<text x="160" y="62" font-size="11.5" fill="#dd9999">docker-compose.yml, nginx.conf, Dockerfile</text>
+<line x1="340" y1="76" x2="340" y2="102" stroke="#888" stroke-width="1.5" marker-end="url(#a3)"/>
+<rect x="140" y="102" width="400" height="56" rx="8" fill="#3a2620" stroke="#d85a30" stroke-width="1"/>
+<text x="160" y="126" font-size="13" font-weight="600" fill="#f5c4b3">2. The container</text>
+<text x="160" y="144" font-size="11.5" fill="#e0a589">docker ps, docker logs</text>
+<line x1="340" y1="158" x2="340" y2="184" stroke="#888" stroke-width="1.5" marker-end="url(#a3)"/>
+<rect x="140" y="184" width="400" height="56" rx="8" fill="#3a2e10" stroke="#854f0b" stroke-width="1"/>
+<text x="160" y="208" font-size="13" font-weight="600" fill="#fac775">3. Network, from the server</text>
+<text x="160" y="226" font-size="11.5" fill="#d9a85f">curl http://localhost</text>
+<line x1="340" y1="240" x2="340" y2="266" stroke="#888" stroke-width="1.5" marker-end="url(#a3)"/>
+<rect x="140" y="266" width="400" height="56" rx="8" fill="#1f3508" stroke="#3b6d11" stroke-width="1"/>
+<text x="160" y="290" font-size="13" font-weight="600" fill="#c0dd97">4. DNS</text>
+<text x="160" y="308" font-size="11.5" fill="#a3c479">nslookup yourdomain.com</text>
+<line x1="340" y1="322" x2="340" y2="348" stroke="#888" stroke-width="1.5" marker-end="url(#a3)"/>
+<rect x="140" y="348" width="400" height="44" rx="8" fill="#2a2a2a" stroke="#444" stroke-width="1"/>
+<text x="160" y="374" font-size="13" font-weight="600" fill="#ccc">5. Only then, the browser</text>
+</svg>`
+
+};
+
+// ── Minimal markdown → HTML renderer ────────────────────────
+// Supports: headers, bold, italic, links, code blocks, inline code,
+// unordered/ordered lists, blockquotes, hr, paragraphs.
+function renderMarkdown(md) {
+  if (!md) return '<p>No content yet.</p>';
+
+  // Extract [[DIAGRAM:name]] placeholders BEFORE escaping, so raw SVG survives
+  const diagramStash = [];
+  let pre = md.replace(/\[\[DIAGRAM:([a-z0-9_]+)\]\]/gi, (_, name) => {
+    const svg = DIAGRAMS[name.toLowerCase()];
+    const token = `@@DIAGRAM_${diagramStash.length}@@`;
+    diagramStash.push(svg || '<p><em>(diagram not found)</em></p>');
+    return `\n\n${token}\n\n`;
+  });
+
+  // Escape HTML first to prevent injection, then re-allow our own tags
+  let html = pre
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
+  // Code blocks ```...```
+  html = html.replace(/```([a-z]*)\n([\s\S]*?)```/g, (_, lang, code) =>
+    `<pre><code>${code.trim()}</code></pre>`
+  );
+
+  // Headers
+  html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+  html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+  html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+
+  // Blockquote
+  html = html.replace(/^> (.*$)/gim, '<blockquote>$1</blockquote>');
+
+  // Horizontal rule
+  html = html.replace(/^---$/gim, '<hr>');
+
+  // Bold / italic
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+
+  // Inline code
+  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+  // Links [text](url)
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+
+  // Tables — | col | col | rows, with a |---|---| separator line
+  {
+    const lines2 = html.split('\n');
+    const out2 = [];
+    let i = 0;
+    while (i < lines2.length) {
+      const line = lines2[i];
+      const isRow = /^\s*\|(.+)\|\s*$/.test(line);
+      const nextIsSep = i + 1 < lines2.length && /^\s*\|?[\s:|-]+\|?\s*$/.test(lines2[i+1]) && lines2[i+1].includes('-');
+      if (isRow && nextIsSep) {
+        const headers = line.split('|').slice(1, -1).map(s => s.trim());
+        i += 2; // skip header + separator
+        const rows = [];
+        while (i < lines2.length && /^\s*\|(.+)\|\s*$/.test(lines2[i])) {
+          rows.push(lines2[i].split('|').slice(1, -1).map(s => s.trim()));
+          i++;
+        }
+        let table = '<table><thead><tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr></thead><tbody>';
+        for (const r of rows) {
+          table += '<tr>' + r.map(c => `<td>${c}</td>`).join('') + '</tr>';
+        }
+        table += '</tbody></table>';
+        out2.push(table);
+      } else {
+        out2.push(line);
+        i++;
+      }
+    }
+    html = out2.join('\n');
+  }
+
+  // Lists — group consecutive list lines
+  const lines = html.split('\n');
+  let out = [];
+  let inUl = false, inOl = false;
+
+  for (let line of lines) {
+    const ulMatch = line.match(/^[-*] (.*)$/);
+    const olMatch = line.match(/^\d+\. (.*)$/);
+
+    if (ulMatch) {
+      if (!inUl) { out.push('<ul>'); inUl = true; }
+      out.push(`<li>${ulMatch[1]}</li>`);
+      continue;
+    } else if (inUl) { out.push('</ul>'); inUl = false; }
+
+    if (olMatch) {
+      if (!inOl) { out.push('<ol>'); inOl = true; }
+      out.push(`<li>${olMatch[1]}</li>`);
+      continue;
+    } else if (inOl) { out.push('</ol>'); inOl = false; }
+
+    out.push(line);
+  }
+  if (inUl) out.push('</ul>');
+  if (inOl) out.push('</ol>');
+  html = out.join('\n');
+
+  // Paragraphs — wrap remaining plain lines (not already tags) into <p>
+  const blockTags = /^<(h1|h2|h3|ul|ol|li|blockquote|pre|hr|table)/;
+  html = html.split('\n\n').map(block => {
+    block = block.trim();
+    if (!block) return '';
+    if (/^@@DIAGRAM_\d+@@$/.test(block)) return block;
+    if (blockTags.test(block) || block.startsWith('<pre') || block.includes('<li>')) return block;
+    return `<p>${block}</p>`;
+  }).join('\n');
+
+  // Restore diagram placeholders with their real SVG, wrapped for spacing
+  html = html.replace(/@@DIAGRAM_(\d+)@@/g, (_, i) =>
+    `<div class="art-diagram">${diagramStash[parseInt(i)]}</div>`
+  );
+
+  return html;
+}
+
+const CAT_COLORS = {
+  cicd:'var(--accent)',kubernetes:'var(--teal)',docker:'var(--accent)',
+  aws:'var(--yellow)',security:'var(--red)',monitoring:'var(--green)',
+  linux:'var(--text2)',iac:'var(--orange)'
+};
+
+const TAG_CLASS = { cicd:'t-blue', kubernetes:'t-green', docker:'t-blue',
+  aws:'t-yellow', security:'t-red', monitoring:'t-green', linux:'t-blue', iac:'t-yellow' };
+
+// Hero background gradients per category — distinct mood per topic
+const HERO_GRADIENTS = {
+  cicd:       'linear-gradient(135deg,#16243f 0%,#0a1424 55%,#0a0a0a 100%)',
+  kubernetes: 'linear-gradient(135deg,#0e2f2a 0%,#0a1f1c 55%,#0a0a0a 100%)',
+  docker:     'linear-gradient(135deg,#16243f 0%,#0a1424 55%,#0a0a0a 100%)',
+  aws:        'linear-gradient(135deg,#3a2e10 0%,#241c0a 55%,#0a0a0a 100%)',
+  security:   'linear-gradient(135deg,#3a1818 0%,#220e0e 55%,#0a0a0a 100%)',
+  monitoring: 'linear-gradient(135deg,#163018 0%,#0e1f10 55%,#0a0a0a 100%)',
+  linux:      'linear-gradient(135deg,#22242a 0%,#15161a 55%,#0a0a0a 100%)',
+  iac:        'linear-gradient(135deg,#3a2410 0%,#23150a 55%,#0a0a0a 100%)',
+};
+
+function lvlTagClass(level) {
+  return {Beginner:'t-green',Intermediate:'t-yellow',Advanced:'t-red'}[level] || 't-green';
+}
+
+function renderArticle(a) {
+  document.title = `${a.title} — DevOps Hub`;
+  const tagClass = TAG_CLASS[a.category_slug] || 't-blue';
+  const heroGrad = HERO_GRADIENTS[a.category_slug] || HERO_GRADIENTS['cicd'];
+
+  // Populate hero
+  document.getElementById('heroBg').style.background = heroGrad;
+  document.getElementById('heroKicker').textContent = (a.category || 'General').toUpperCase();
+  document.getElementById('heroTitle').textContent = a.title;
+  document.getElementById('heroSection').style.display = 'flex';
+
+  document.getElementById('content').innerHTML = `
+    <div class="art-meta-row">
+      <span class="tag ${tagClass}">${a.category || 'General'}</span>
+      <span class="tag ${lvlTagClass(a.level)}">${a.level}</span>
+      <span class="rtime">${a.read_time} min read</span>
+    </div>
+    ${a.excerpt ? `<p class="art-excerpt">${a.excerpt}</p>` : ''}
+    <div class="art-body">${renderMarkdown(a.content)}</div>
+    <div class="art-footer">
+      <button class="back-btn" onclick="location.href='index.html'">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3L5 8l5 5"/></svg>
+        Back to all articles
+      </button>
+      <div class="more-section" id="moreSection"></div>
+    </div>
+  `;
+  loadMoreArticles(a.category_slug, a.slug);
+}
+
+const CARD_ICONS = {
+  cicd:       `<circle cx="5" cy="9" r="2"/><circle cx="13" cy="9" r="2"/><path d="M7 9h2m2 0h-2m0 0V7m0 2v2"/>`,
+  kubernetes: `<polygon points="9,2 16,6 16,12 9,16 2,12 2,6"/><circle cx="9" cy="9" r="2"/>`,
+  docker:     `<rect x="2" y="2" width="14" height="14" rx="3"/><rect x="5" y="5" width="8" height="8" rx="2"/>`,
+  aws:        `<rect x="3" y="7" width="12" height="7" rx="2"/><path d="M6 7V5a3 3 0 0 1 6 0v2"/>`,
+  security:   `<path d="M9 2L15 5v5c0 3-2.5 5.5-6 6-3.5-.5-6-3-6-6V5L9 2z"/>`,
+  monitoring: `<polyline points="2,12 5,8 8,10 11,5 14,9 16,6"/>`,
+  linux:      `<rect x="2" y="3" width="14" height="10" rx="2"/><path d="M6 16h6M9 13v3"/>`,
+  iac:        `<path d="M3 6l6-4 6 4v6l-6 4-6-4V6z"/><path d="M9 2v14M3 6l6 4 6-4"/>`,
+};
+
+async function loadMoreArticles(categorySlug, currentSlug) { return; 
+  const container = document.getElementById('moreSection');
+  if (!container) return;
+  try {
+    const res = await fetch(`${API}/articles?category=${categorySlug}&per_page=4`, { signal: AbortSignal.timeout(4000) });
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    const others = data.articles.filter(x => x.slug !== currentSlug).slice(0, 3);
+    if (!others.length) return;
+
+    container.innerHTML = `
+      <div class="more-label">More in this topic</div>
+      <div class="more-grid">
+        ${others.map(o => {
+          const icon = CARD_ICONS[o.category_slug] || CARD_ICONS['docker'];
+          return `<div class="more-card" onclick="location.href='article.html?slug=${o.slug}'">
+            <div class="more-card-icon">
+              <svg viewBox="0 0 18 18" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${icon}</svg>
+            </div>
+            <div>
+              <h4>${o.title}</h4>
+              <p>${o.level} · ${o.read_time} min read</p>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    `;
+  } catch {
+    // Silently skip — not critical to the page
+  }
+}
+
+function renderError(msg) {
+  document.getElementById('content').innerHTML = `
+    <div class="state-box">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+      <p style="font-size:16px;color:var(--text2);margin-bottom:18px">${msg}</p>
+      <button class="back-btn" onclick="location.href='index.html'">← Back to all articles</button>
+    </div>
+  `;
+}
+
+
+async function loadArticle() {
+  renderArticle(MOCK_ARTICLE);
+}
+
+loadArticle();
+</script>
+</body>
+</html>
