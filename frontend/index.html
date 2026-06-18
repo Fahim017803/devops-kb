@@ -98,6 +98,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,10,10,.92);backdrop-fil
 .art-card p{font-size:13px;color:var(--text2);line-height:1.55;flex:1;margin-bottom:16px}
 .card-foot{display:flex;justify-content:space-between;align-items:center;margin-top:auto}
 .card-cat{font-size:12px;color:var(--accent)}
+.card-date{font-size:12px;color:var(--text3)}
 .card-bm svg{width:16px;height:16px;color:var(--text3);transition:color .15s}
 .art-card:hover .card-bm svg{color:var(--text2)}
 
@@ -225,7 +226,7 @@ kbd{display:inline-block;background:var(--bg4);border:1px solid var(--border2);b
 
   <!-- FEATURED -->
   <section style="margin-bottom:64px">
-    <div class="section-label">Featured this week</div>
+    <div class="section-label">Latest from the blog</div>
     <div class="featured-grid" id="featuredGrid">
       <div class="feat-main">
         <div class="feat-img"><div class="feat-img-icon"></div></div>
@@ -354,7 +355,7 @@ function renderArticles(list) {
       <p>${a.excerpt}</p>
       <div class="card-foot">
         <span class="card-cat">${a.category}</span>
-        <span class="card-bm"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2h8a1 1 0 0 1 1 1v11l-5-3-5 3V3a1 1 0 0 1 1-1z"/></svg></span>
+        <span class="card-date">${formatDate(a.created_at)}</span>
       </div>
     </div>`;
   }).join('');
@@ -409,6 +410,14 @@ document.getElementById('filterBar').addEventListener('click',e=>{
   loadArticles(b.dataset.cat);
 });
 
+// Format an ISO date string into something readable, e.g. "Jun 17, 2026"
+function formatDate(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (isNaN(d)) return '';
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
 // FEATURED SECTION ──────────────────────────────────────────
 const FEATURED_ICONS = {
   cicd: `<polygon points="9,2 16,6 16,12 9,16 2,12 2,6"/><circle cx="9" cy="9" r="2"/>`,
@@ -458,7 +467,7 @@ function renderFeatured(list) {
         <div class="feat-meta">
           <span class="tag ${mainTagCls}">${main.category||''}</span>
           <span class="tag ${lvlTagCls}">${main.level}</span>
-          <span class="rtime">${main.read_time} min read</span>
+          <span class="rtime">${formatDate(main.created_at)} · ${main.read_time} min read</span>
         </div>
       </div>
     </div>
@@ -477,7 +486,8 @@ function renderFeatured(list) {
 
 async function loadFeatured() {
   try {
-    const res = await fetch(`${API}/articles?featured=true&per_page=4`,{signal:AbortSignal.timeout(3000)});
+    // Always show the 4 most recently published articles — newest first
+    const res = await fetch(`${API}/articles?per_page=4`,{signal:AbortSignal.timeout(3000)});
     if(!res.ok) throw 0;
     const data = await res.json();
     renderFeatured(data.articles);
