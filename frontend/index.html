@@ -60,7 +60,8 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,10,10,.92);backdrop-fil
 .feat-main{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;cursor:pointer;transition:border-color .2s;display:flex;flex-direction:column}
 .feat-main:hover{border-color:var(--border2)}
 .feat-img{background:linear-gradient(160deg,#1e3a5f,#0f2440);height:220px;display:flex;align-items:center;justify-content:center;position:relative}
-.feat-img-icon{width:48px;height:48px;border:2px solid rgba(255,255,255,.3);border-radius:8px}
+.feat-img-icon{width:88px;height:88px;display:flex;align-items:center;justify-content:center;opacity:.92}
+.feat-img-icon svg{width:72px;height:72px}
 .depth-badge{position:absolute;top:14px;left:14px;background:var(--accent);color:#fff;font-size:11px;font-weight:600;padding:3px 10px;border-radius:4px}
 .feat-body{padding:22px;flex:1}
 .feat-body h2{font-size:18px;font-weight:600;line-height:1.4;color:#fff;margin-bottom:10px}
@@ -420,6 +421,18 @@ const FEATURED_ICONS = {
   iac: `<path d="M3 6l6-4 6 4v6l-6 4-6-4V6z"/><path d="M9 2v14M3 6l6 4 6-4"/>`,
 };
 
+// Large, bold versions for the big featured hero image — white stroke on gradient
+const HERO_ICONS = {
+  cicd: `<svg viewBox="0 0 64 64" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="48" r="7"/><circle cx="46" cy="16" r="7"/><circle cx="18" cy="16" r="7"/><path d="M18 23v18M25 16h13a8 8 0 0 1 8 8v0"/><path d="M52 30l-6-6 6-6"/></svg>`,
+  kubernetes: `<svg viewBox="0 0 64 64" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="32,6 56,20 56,44 32,58 8,44 8,20"/><circle cx="32" cy="32" r="9"/><path d="M32 6v17M56 20L41 29M56 44L41 35M32 58V41M8 44l15-9M8 20l15 9"/></svg>`,
+  docker: `<svg viewBox="0 0 64 64" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="26" width="12" height="12" rx="2"/><rect x="20" y="26" width="12" height="12" rx="2"/><rect x="20" y="12" width="12" height="12" rx="2"/><rect x="34" y="26" width="12" height="12" rx="2"/><path d="M52 32c4 0 6 3 6 6s-3 7-9 7H16c-6 0-10-5-10-11"/></svg>`,
+  aws: `<svg viewBox="0 0 64 64" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="10" y="26" width="44" height="26" rx="6"/><path d="M22 26V18a10 10 0 0 1 20 0v8"/><path d="M14 58c8 4 28 4 36 0"/></svg>`,
+  security: `<svg viewBox="0 0 64 64" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M32 6l22 8v16c0 16-10 26-22 30C20 56 10 46 10 30V14l22-8z"/><path d="M22 32l7 7 14-14"/></svg>`,
+  monitoring: `<svg viewBox="0 0 64 64" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 42l10-14 9 8 12-18 9 12 8-10"/><path d="M8 52h48"/></svg>`,
+  linux: `<svg viewBox="0 0 64 64" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="14" width="48" height="32" rx="5"/><path d="M22 54h20M32 46v8"/><path d="M18 24h8M38 24h8M22 32h20"/></svg>`,
+  iac: `<svg viewBox="0 0 64 64" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 20l22-14 22 14v24l-22 14-22-14V20z"/><path d="M32 6v52M10 20l22 14 22-14"/></svg>`,
+};
+
 function renderFeatured(list) {
   const grid = document.getElementById('featuredGrid');
   if (!list.length) {
@@ -431,12 +444,13 @@ function renderFeatured(list) {
   const mainColor = CAT_COLORS[mainSlug] || 'var(--accent)';
   const mainTagCls = {cicd:'t-blue',kubernetes:'t-green',docker:'t-blue',aws:'t-yellow',security:'t-red',monitoring:'t-green',linux:'t-blue',iac:'t-yellow'}[mainSlug] || 't-blue';
   const lvlTagCls = {Beginner:'t-green',Intermediate:'t-yellow',Advanced:'t-red'}[main.level] || 't-green';
+  const heroIcon = HERO_ICONS[mainSlug] || HERO_ICONS['docker'];
 
   grid.innerHTML = `
     <div class="feat-main" onclick="openArticle('${main.slug}')">
       <div class="feat-img">
         <div class="depth-badge">In depth</div>
-        <div class="feat-img-icon"></div>
+        <div class="feat-img-icon">${heroIcon}</div>
       </div>
       <div class="feat-body">
         <h2>${main.title}</h2>
