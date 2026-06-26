@@ -252,7 +252,7 @@ tr:hover td{background:var(--bg3)}
         <div style="padding:24px">
           <div class="table-wrap">
             <table>
-              <thead><tr><th>Name</th><th>Slug</th><th>Icon</th><th>Articles</th></tr></thead>
+              <thead><tr><th>Name</th><th>Slug</th><th>Icon</th><th>Articles</th><th>Actions</th></tr></thead>
               <tbody id="catsTbody"></tbody>
             </table>
           </div>
@@ -305,8 +305,15 @@ tr:hover td{background:var(--bg3)}
         <textarea id="fExcerpt" placeholder="Short description shown in article cards..." style="min-height:80px"></textarea>
       </div>
       <div class="form-field">
-        <label>Content (Markdown)</label>
-        <textarea id="fContent" placeholder="# Article content in Markdown..." style="min-height:160px;font-family:monospace;font-size:13px"></textarea>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <label style="margin-bottom:0">Content (Markdown)</label>
+          <div style="display:flex;gap:4px">
+            <button type="button" class="btn btn-sm" id="tabEdit" onclick="switchTab('edit')" style="background:var(--accent-bg);border-color:var(--accent);color:var(--accent)">Edit</button>
+            <button type="button" class="btn btn-sm" id="tabPreview" onclick="switchTab('preview')">Preview</button>
+          </div>
+        </div>
+        <textarea id="fContent" placeholder="# Article content in Markdown..." style="min-height:260px;font-family:monospace;font-size:13px" oninput="updatePreview()"></textarea>
+        <div id="fContentPreview" style="display:none;min-height:260px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rs);padding:14px 16px;font-size:14px;line-height:1.7;overflow-y:auto"></div>
       </div>
       <div class="form-field">
         <label>Featured</label>
@@ -436,7 +443,7 @@ async function loadCategories(renderTable=false) {
 function renderCatsTable() {
   const tbody = document.getElementById('catsTbody');
   if(!categories.length) {
-    tbody.innerHTML = '<tr><td colspan="4"><div class="empty">No categories yet</div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5"><div class="empty">No categories yet</div></td></tr>';
     return;
   }
   tbody.innerHTML = categories.map(c=>`
@@ -445,7 +452,19 @@ function renderCatsTable() {
       <td><code style="font-size:12px;color:var(--text3)">${c.slug}</code></td>
       <td>${c.icon}</td>
       <td>${c.count}</td>
+      <td><div class="actions">
+        ${c.count===0 ? `<button class="btn btn-sm btn-danger" onclick="deleteCategory(${c.id},'${c.name.replace(/'/g,"\\'")}')">Delete</button>` : '<span style="color:var(--text3);font-size:12px">Has articles</span>'}
+      </div></td>
     </tr>`).join('');
+}
+
+async function deleteCategory(id, name) {
+  if(!confirm(`Delete category "${name}"?\nThis cannot be undone.`)) return;
+  try {
+    await api(`/admin/categories/${id}`, {method:'DELETE'});
+    toast('Category deleted','success');
+    loadCategories(true);
+  } catch(e) { toast(e.message,'error'); }
 }
 
 function openCatModal()  { document.getElementById('catModal').classList.add('open'); }
@@ -537,6 +556,7 @@ function openModal(article=null) {
   document.getElementById('fLevel').value     = article?.level || 'Beginner';
   if(article?.category_id) document.getElementById('fCategory').value = article.category_id;
   document.getElementById('modalTitle').textContent = article ? 'Edit article' : 'New article';
+  switchTab('edit');
   document.getElementById('articleModal').classList.add('open');
 }
 
@@ -601,6 +621,44 @@ function toast(msg, type='success') {
   el.textContent = msg;
   el.className = `toast ${type} show`;
   setTimeout(()=>el.classList.remove('show'), 3000);
+}
+
+// ── MARKDOWN PREVIEW ────────────────────────────────────
+function switchTab(tab) {
+  const ta = document.getElementById('fContent');
+  const pv = document.getElementById('fContentPreview');
+  const btnEdit = document.getElementById('tabEdit');
+  const btnPrev = document.getElementById('tabPreview');
+  if(tab === 'preview') {
+    updatePreview();
+    ta.style.display = 'none'; pv.style.display = 'block';
+    btnPrev.style.cssText = 'background:var(--accent-bg);border-color:var(--accent);color:var(--accent)';
+    btnEdit.style.cssText = '';
+  } else {
+    ta.style.display = ''; pv.style.display = 'none';
+    btnEdit.style.cssText = 'background:var(--accent-bg);border-color:var(--accent);color:var(--accent)';
+    btnPrev.style.cssText = '';
+  }
+}
+
+function updatePreview() {
+  const md = document.getElementById('fContent').value;
+  document.getElementById('fContentPreview').innerHTML = simpleMd(md);
+}
+
+function simpleMd(md) {
+  if(!md) return '<p style="color:var(--text3)">Nothing to preview yet...</p>';
+  let h = md.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  h = h.replace(/```[\s\S]*?```/g, m => `<pre style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:12px;overflow-x:auto;margin:12px 0"><code style="font-size:13px;color:#9cdcfe">${m.replace(/```[a-z]*\n?/g,'').trim()}</code></pre>`);
+  h = h.replace(/^### (.+)$/gm,'<h3 style="font-size:15px;font-weight:600;color:#fff;margin:20px 0 8px">$1</h3>');
+  h = h.replace(/^## (.+)$/gm,'<h2 style="font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin:24px 0 10px">$1</h2>');
+  h = h.replace(/^# (.+)$/gm,'<h1 style="font-size:20px;font-weight:600;color:#fff;margin:16px 0 10px">$1</h1>');
+  h = h.replace(/\*\*(.+?)\*\*/g,'<strong style="color:#fff">$1</strong>');
+  h = h.replace(/`([^`]+)`/g,'<code style="background:var(--bg4);padding:2px 5px;border-radius:3px;font-size:12px;color:#e8b34a">$1</code>');
+  h = h.replace(/^[-*] (.+)$/gm,'<li style="margin-bottom:4px">$1</li>');
+  h = h.replace(/(<li.*<\/li>\n?)+/g, m=>`<ul style="padding-left:20px;margin:8px 0">${m}</ul>`);
+  h = h.split(/\n\n+/).map(b=>{b=b.trim();return(!b||b.startsWith('<'))?b:`<p style="color:#d4d4d4;margin-bottom:12px">${b}</p>`;}).join('');
+  return h;
 }
 
 // ── KEYBOARD SHORTCUTS ───────────────────────────────────

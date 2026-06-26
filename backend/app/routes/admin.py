@@ -66,14 +66,14 @@ def create_article():
 @bp.route("/articles/<int:article_id>")
 @jwt_required()
 def get_article(article_id):
-    a = Article.query.get_or_404(article_id)
+    a = db.get_or_404(Article, article_id)
     return jsonify(a.to_dict(full=True))
 
 # ── Update article ─────────────────────────────────────────
 @bp.route("/articles/<int:article_id>", methods=["PUT"])
 @jwt_required()
 def update_article(article_id):
-    a    = Article.query.get_or_404(article_id)
+    a    = db.get_or_404(Article, article_id)
     data = request.get_json()
 
     a.title       = data.get("title",       a.title)
@@ -92,7 +92,7 @@ def update_article(article_id):
 @bp.route("/articles/<int:article_id>", methods=["DELETE"])
 @jwt_required()
 def delete_article(article_id):
-    a = Article.query.get_or_404(article_id)
+    a = db.get_or_404(Article, article_id)
     db.session.delete(a)
     db.session.commit()
     return jsonify({"deleted": article_id})
@@ -115,3 +115,13 @@ def create_category():
     db.session.add(cat)
     db.session.commit()
     return jsonify(cat.to_dict()), 201
+
+@bp.route("/categories/<int:cat_id>", methods=["DELETE"])
+@jwt_required()
+def delete_category(cat_id):
+    cat = db.get_or_404(Category, cat_id)
+    if cat.articles:
+        return jsonify({"error": "Cannot delete a category that still has articles"}), 400
+    db.session.delete(cat)
+    db.session.commit()
+    return jsonify({"deleted": cat_id})

@@ -108,7 +108,19 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,10,10,.92);backdrop-fil
   .art-meta-row{flex-wrap:wrap}
   .rtime{margin-left:0;width:100%}
 }
+
+/* Highlight.js theme overrides — match our dark palette */
+.hljs{background:var(--bg2)!important;color:#9cdcfe!important;padding:0!important}
+.hljs-keyword{color:#569cd6}
+.hljs-string{color:#ce9178}
+.hljs-comment{color:#6a9955}
+.hljs-number{color:#b5cea8}
+.hljs-title{color:#dcdcaa}
+.hljs-attr{color:#9cdcfe}
+.hljs-built_in{color:#4ec9b0}
 </style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/base16/onedark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 </head>
 <body>
 
@@ -744,6 +756,7 @@ function renderArticle(a) {
     </div>
   `;
   loadMoreArticles(a.category_slug, a.slug);
+  document.querySelectorAll('.art-body pre code').forEach(el => hljs.highlightElement(el));
 }
 
 const CARD_ICONS = {

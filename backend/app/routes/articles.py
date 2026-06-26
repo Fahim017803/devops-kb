@@ -43,6 +43,8 @@ def get_articles():
 @bp.route("/articles/<slug>")
 def get_article(slug):
     article = Article.query.filter_by(slug=slug).first_or_404()
+    article.views = (article.views or 0) + 1
+    db.session.commit()
     return jsonify(article.to_dict(full=True))
 
 # ── Search ─────────────────────────────────────────────────

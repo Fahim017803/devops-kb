@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS articles (
     level       ENUM('Beginner','Intermediate','Advanced') DEFAULT 'Beginner',
     read_time   INT DEFAULT 5,
     is_featured BOOLEAN DEFAULT FALSE,
+    views       INT DEFAULT 0,
     category_id INT NOT NULL,
     created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at  DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

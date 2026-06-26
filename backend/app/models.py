@@ -1,5 +1,5 @@
 from app import db
-from datetime import datetime
+from datetime import datetime, timezone
 from werkzeug.security import generate_password_hash, check_password_hash
 
 class AdminUser(db.Model):
@@ -7,7 +7,7 @@ class AdminUser(db.Model):
     id            = db.Column(db.Integer, primary_key=True)
     username      = db.Column(db.String(50), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
-    created_at    = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at    = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -37,9 +37,10 @@ class Article(db.Model):
     level        = db.Column(db.Enum("Beginner","Intermediate","Advanced"), default="Beginner")
     read_time    = db.Column(db.Integer, default=5)
     is_featured  = db.Column(db.Boolean, default=False)
+    views        = db.Column(db.Integer, default=0)
     category_id  = db.Column(db.Integer, db.ForeignKey("categories.id"), nullable=False)
-    created_at   = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at   = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at   = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at   = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     def to_dict(self, full=False):
         data = {
@@ -49,6 +50,7 @@ class Article(db.Model):
             "category": self.category.name if self.category else None,
             "category_slug": self.category.slug if self.category else None,
             "category_id": self.category_id,
+            "views":      self.views,
             "created_at": self.created_at.isoformat(),
         }
         if full:
